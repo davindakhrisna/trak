@@ -49,17 +49,17 @@ pub fn LoginPage() -> impl IntoView {
                     <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">"Sign in"</h1>
                     <p class="text-xs text-gray">
                         {move || {
-                            if store.has_any_user() {
-                                "Enter your credentials to continue."
-                            } else {
+                            if store.auth_initialized.get() && !store.has_any_user() {
                                 "Instance uninitialized. Register the first administrator account."
+                            } else {
+                                "Enter your credentials to continue."
                             }
                         }}
                     </p>
                 </div>
 
                 {move || {
-                    if !store.has_any_user() {
+                    if store.auth_initialized.get() && !store.has_any_user() {
                         view! {
                             <div class="w-full border border-black dark:border-white p-6 flex flex-col items-center gap-4 bg-white dark:bg-black">
                                 <p class="text-sm text-black dark:text-white">
