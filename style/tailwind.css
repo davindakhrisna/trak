@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-radius: 0px !important;
+    box-shadow: none !important;
+  }
+
+  html,
+  body {
+    background-color: #FFFFFF;
+    color: #000000;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html.dark,
+  html.dark body {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+
+  ::selection {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+
+  html.dark ::selection {
+    background-color: #FFFFFF;
+    color: #000000;
+  }
+}
+
+@layer components {
+  .monolith-page {
+    @apply min-h-screen w-full bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-center px-4 py-12 text-center transition-colors duration-75;
+  }
+
+  .monolith-spine {
+    @apply w-full max-w-spine mx-auto flex flex-col items-center text-center;
+  }
+
+  .monolith-spine-wide {
+    @apply w-full max-w-spine-wide mx-auto flex flex-col items-center text-center;
+  }
+
+  .scroll-monolith {
+    scrollbar-width: thin;
+    scrollbar-color: #000000 #FFFFFF;
+  }
+
+  html.dark .scroll-monolith {
+    scrollbar-color: #FFFFFF #000000;
+  }
+
+  .scroll-monolith::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scroll-monolith::-webkit-scrollbar-track {
+    background: #FFFFFF;
+    border-left: 1px solid #000000;
+  }
+
+  html.dark .scroll-monolith::-webkit-scrollbar-track {
+    background: #000000;
+    border-left: 1px solid #FFFFFF;
+  }
+
+  .scroll-monolith::-webkit-scrollbar-thumb {
+    background: #000000;
+  }
+
+  html.dark .scroll-monolith::-webkit-scrollbar-thumb {
+    background: #FFFFFF;
+  }
+
+  .scroll-monolith::-webkit-scrollbar-thumb:hover {
+    background: #737373;
+  }
+
+  .scroll-monolith::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+  }
+
+  .input-monolith {
+    @apply w-full bg-white dark:bg-black text-black dark:text-white placeholder-gray border border-black dark:border-white rounded-none px-4 py-3 text-left font-sans text-sm focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors duration-75;
+  }
+
+  .btn-monolith-solid {
+    @apply w-full bg-black dark:bg-white text-white dark:text-black border border-black dark:border-white rounded-none px-4 py-3 text-center font-sans text-sm font-medium hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer select-none;
+  }
+
+  .btn-monolith-ghost {
+    @apply bg-white dark:bg-black text-black dark:text-white border border-black dark:border-white rounded-none px-3 py-1.5 text-center font-mono text-xs hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-75 cursor-pointer select-none shrink-0;
+  }
+
+  .cell-row {
+    @apply w-full border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white rounded-none px-4 py-3.5 flex items-center justify-between gap-3 text-left transition-colors duration-75;
+  }
+
+  .cell-row-muted {
+    @apply w-full border border-gray bg-white dark:bg-black text-gray rounded-none px-4 py-3.5 flex items-center justify-between gap-3 text-left transition-colors duration-75;
+  }
+
+  .check-square {
+    @apply w-4 h-4 border border-black dark:border-white bg-white dark:bg-black rounded-none flex items-center justify-center shrink-0 cursor-pointer;
+  }
+
+  .check-square-active {
+    @apply w-4 h-4 border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black rounded-none flex items-center justify-center shrink-0 cursor-pointer;
+  }
+}
