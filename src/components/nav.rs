@@ -26,6 +26,9 @@ pub fn CenteredNav(active_path: &'static str) -> impl IntoView {
                 <a href="/templates" class=move || nav_item_class("/templates")>
                     "Templates"
                 </a>
+                <a href="/settings" class=move || nav_item_class("/settings")>
+                    "Settings"
+                </a>
                 {move || {
                     if store.is_admin() {
                         view! {
@@ -52,7 +55,17 @@ pub fn CenteredNav(active_path: &'static str) -> impl IntoView {
                             <span>"·"</span>
                             <a
                                 href="/login"
-                                on:click=move |_| store.logout()
+                                on:click=move |ev: leptos::ev::MouseEvent| {
+                                    ev.prevent_default();
+                                    leptos::task::spawn_local(async move {
+                                        let _ = crate::backend::api_auth::logout().await;
+                                        store.current_user_id.set(None);
+                                        #[cfg(target_arch = "wasm32")]
+                                        if let Some(win) = web_sys::window() {
+                                            let _ = win.location().set_href("/login");
+                                        }
+                                    });
+                                }
                                 class="hover:text-black dark:hover:text-white hover:underline cursor-pointer"
                             >
                                 "Sign out"
@@ -61,7 +74,16 @@ pub fn CenteredNav(active_path: &'static str) -> impl IntoView {
                         }
                             .into_any()
                     } else {
-                        ().into_any()
+                        view! {
+                            <a
+                                href="/login"
+                                class="hover:text-black dark:hover:text-white hover:underline cursor-pointer"
+                            >
+                                "Sign in"
+                            </a>
+                            <span>"·"</span>
+                        }
+                            .into_any()
                     }
                 }}
                 <ThemeSelector />

@@ -1,6 +1,7 @@
 use crate::domain::{RecurringTemplate, Weekday};
 use leptos::prelude::*;
 
+#[cfg(feature = "ssr")]
 fn weekday_from_int(val: i64) -> Weekday {
     match val {
         1 => Weekday::Mon,
@@ -13,6 +14,7 @@ fn weekday_from_int(val: i64) -> Weekday {
     }
 }
 
+#[cfg(feature = "ssr")]
 fn weekday_to_int(day: Weekday) -> i64 {
     match day {
         Weekday::Mon => 1,
@@ -32,8 +34,8 @@ pub async fn fetch_templates() -> Result<Vec<RecurringTemplate>, ServerFnError> 
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     let rows = sqlx::query(
         r#"
@@ -78,12 +80,14 @@ pub async fn create_template(
     use uuid::Uuid;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     let mut clean_title = title.trim().to_string();
     if clean_title.is_empty() {
-        return Err(ServerFnError::new("Template task description cannot be empty."));
+        return Err(ServerFnError::new(
+            "Template task description cannot be empty.",
+        ));
     }
     if clean_title.len() > 200 {
         clean_title.truncate(200);
@@ -145,8 +149,8 @@ pub async fn delete_template(template_id: String) -> Result<(), ServerFnError> {
     use crate::backend::AppState;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     sqlx::query("DELETE FROM recurring_templates WHERE id = ? AND user_id = ?")
         .bind(&template_id)

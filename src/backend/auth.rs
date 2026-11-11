@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[cfg(feature = "ssr")]
 use crate::domain::UserRole;
 #[cfg(feature = "ssr")]
@@ -7,8 +9,6 @@ use argon2::{
 };
 #[cfg(feature = "ssr")]
 use hmac::{Hmac, Mac};
-#[cfg(feature = "ssr")]
-use serde::{Deserialize, Serialize};
 #[cfg(feature = "ssr")]
 use sha2::Sha256;
 
@@ -49,12 +49,12 @@ pub fn verify_password(password: &str, hash: &str) -> bool {
 
 #[cfg(feature = "ssr")]
 pub fn sign_token(claims: &AuthClaims, secret: &[u8]) -> Result<String, String> {
-    let payload = serde_json::to_string(claims)
-        .map_err(|e| format!("Serialization error: {}", e))?;
+    let payload =
+        serde_json::to_string(claims).map_err(|e| format!("Serialization error: {}", e))?;
     let payload_b64 = hex::encode(payload.as_bytes());
 
-    let mut mac = HmacSha256::new_from_slice(secret)
-        .map_err(|e| format!("HMAC key error: {}", e))?;
+    let mut mac =
+        HmacSha256::new_from_slice(secret).map_err(|e| format!("HMAC key error: {}", e))?;
     mac.update(payload_b64.as_bytes());
     let signature = hex::encode(mac.finalize().into_bytes());
 

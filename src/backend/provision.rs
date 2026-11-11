@@ -77,9 +77,7 @@ pub async fn provision_for_user(
 
 #[cfg(feature = "ssr")]
 pub async fn provision_all_users(pool: &Pool<Sqlite>) -> Result<usize, sqlx::Error> {
-    let users = sqlx::query("SELECT id FROM users")
-        .fetch_all(pool)
-        .await?;
+    let users = sqlx::query("SELECT id FROM users").fetch_all(pool).await?;
 
     let today = Utc::now().date_naive();
     let mut total = 0;

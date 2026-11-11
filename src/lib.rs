@@ -4,7 +4,7 @@ pub mod domain;
 pub mod pages;
 pub mod state;
 
-use crate::pages::{LoginPage, RegisterPage, TemplatesPage, TodayPage, UsersPage};
+use crate::pages::{LoginPage, RegisterPage, SettingsPage, TemplatesPage, TodayPage, UsersPage};
 use crate::state::provide_app_store;
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
@@ -41,7 +41,53 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
-    let _store = provide_app_store();
+    let store = provide_app_store();
+
+    #[cfg(feature = "ssr")]
+    {
+        if let Some(state) = leptos::prelude::use_context::<crate::backend::AppState>() {
+            if let Some(claims) = crate::backend::auth::get_auth_claims_from_context(&state) {
+                let role = if claims.role == "ADMIN" {
+                    crate::domain::UserRole::Admin
+                } else {
+                    crate::domain::UserRole::User
+                };
+                store.current_user_id.set(Some(claims.user_id.clone()));
+                store.users.update(|list| {
+                    list.push(crate::domain::UserAccount {
+                        id: claims.user_id.clone(),
+                        username: claims.username.clone(),
+                        password: String::new(),
+                        role,
+                        is_first_admin: false,
+                    });
+                });
+                store.auth_initialized.set(true);
+            }
+        }
+    }
+
+    Effect::new(move |_| {
+        leptos::task::spawn_local(async move {
+            if let Ok(status) = crate::backend::api_auth::check_auth().await {
+                store.first_register_claimed.set(status.has_admin);
+                if status.authenticated {
+                    if let Some(user) = status.user {
+                        let uid = user.id.clone();
+                        store.users.update(|list| {
+                            if !list.iter().any(|u| u.id == uid) {
+                                list.push(user);
+                            }
+                        });
+                        store.current_user_id.set(Some(uid));
+                    }
+                } else {
+                    store.current_user_id.set(None);
+                }
+                store.auth_initialized.set(true);
+            }
+        });
+    });
 
     view! {
         <Stylesheet id="leptos" href="/pkg/trak.css"/>
@@ -64,6 +110,7 @@ pub fn App() -> impl IntoView {
                 <Route path=path!("register") view=RegisterPage/>
                 <Route path=path!("registers") view=RegisterPage/>
                 <Route path=path!("templates") view=TemplatesPage/>
+                <Route path=path!("settings") view=SettingsPage/>
                 <Route path=path!("users") view=UsersPage/>
             </Routes>
         </Router>

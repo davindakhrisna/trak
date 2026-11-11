@@ -10,18 +10,41 @@ pub fn RegisterPage() -> impl IntoView {
     let (password, set_password) = signal(String::new());
     let (feedback, set_feedback) = signal(Option::<String>::None);
 
+    Effect::new(move |_| {
+        leptos::task::spawn_local(async move {
+            if let Ok(st) = crate::backend::api_auth::check_auth().await {
+                store.first_register_claimed.set(st.has_admin);
+            }
+        });
+    });
+
     let on_register = move |ev: SubmitEvent| {
         ev.prevent_default();
-        match store.register_first_admin(username.get(), password.get()) {
-            Ok(()) => {
-                set_username.set(String::new());
-                set_password.set(String::new());
-                set_feedback.set(Some(
-                    "Initial administrator created. Registration is now locked.".to_string(),
-                ));
+        let u = username.get();
+        let p = password.get();
+        leptos::task::spawn_local(async move {
+            match crate::backend::api_auth::register_first_admin(u, p).await {
+                Ok(acc) => {
+                    store.current_user_id.set(Some(acc.id.clone()));
+                    store.first_register_claimed.set(true);
+                    store.users.update(|list| {
+                        if !list.iter().any(|existing| existing.id == acc.id) {
+                            list.push(acc);
+                        }
+                    });
+                    set_username.set(String::new());
+                    set_password.set(String::new());
+                    set_feedback.set(Some(
+                        "Initial administrator created. Redirecting...".to_string(),
+                    ));
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(win) = web_sys::window() {
+                        let _ = win.location().set_href("/");
+                    }
+                }
+                Err(err) => set_feedback.set(Some(err.to_string())),
             }
-            Err(err) => set_feedback.set(Some(err)),
-        }
+        });
     };
 
     view! {

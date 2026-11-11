@@ -12,8 +12,8 @@ pub async fn fetch_today_tasks(
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     let today = client_date
         .as_deref()
@@ -69,8 +69,8 @@ pub async fn create_today_task(
     use uuid::Uuid;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     let mut clean_title = title.trim().to_string();
     if clean_title.is_empty() {
@@ -145,8 +145,8 @@ pub async fn toggle_task_completed(task_id: String) -> Result<bool, ServerFnErro
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     let row = sqlx::query("SELECT completed FROM today_tasks WHERE id = ? AND user_id = ?")
         .bind(&task_id)
@@ -178,8 +178,8 @@ pub async fn delete_today_task(task_id: String) -> Result<(), ServerFnError> {
     use crate::backend::AppState;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     sqlx::query("DELETE FROM today_tasks WHERE id = ? AND user_id = ?")
         .bind(&task_id)

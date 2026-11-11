@@ -10,14 +10,36 @@ pub fn LoginPage() -> impl IntoView {
     let (password, set_password) = signal("password".to_string());
     let (status, set_status) = signal(Option::<String>::None);
 
+    Effect::new(move |_| {
+        leptos::task::spawn_local(async move {
+            if let Ok(st) = crate::backend::api_auth::check_auth().await {
+                store.first_register_claimed.set(st.has_admin);
+            }
+        });
+    });
+
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
-        match store.login(username.get(), password.get()) {
-            Ok(()) => {
-                set_status.set(Some("Signed in. Open Today to view tasks.".to_string()));
+        let u = username.get();
+        let p = password.get();
+        leptos::task::spawn_local(async move {
+            match crate::backend::api_auth::login(u, p).await {
+                Ok(acc) => {
+                    store.current_user_id.set(Some(acc.id.clone()));
+                    store.users.update(|list| {
+                        if !list.iter().any(|existing| existing.id == acc.id) {
+                            list.push(acc);
+                        }
+                    });
+                    set_status.set(Some("Signed in. Redirecting...".to_string()));
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(win) = web_sys::window() {
+                        let _ = win.location().set_href("/");
+                    }
+                }
+                Err(err) => set_status.set(Some(err.to_string())),
             }
-            Err(err) => set_status.set(Some(err)),
-        }
+        });
     };
 
     view! {

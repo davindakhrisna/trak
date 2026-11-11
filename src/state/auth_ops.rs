@@ -64,7 +64,7 @@ impl AppStore {
     }
 
     pub fn has_any_user(&self) -> bool {
-        !self.users.get().is_empty()
+        self.first_register_claimed.get() || !self.users.get().is_empty()
     }
 
     pub fn reset_to_first_boot(&self) {

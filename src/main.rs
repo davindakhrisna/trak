@@ -14,8 +14,8 @@ async fn main() {
     let leptos_options = conf.leptos_options;
     let routes = generate_route_list(App);
 
-    let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:trak.db?mode=rwc".to_string());
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:trak.db?mode=rwc".to_string());
     let pool = init_db(&database_url)
         .await
         .expect("Failed to initialize SQLite database");
@@ -25,6 +25,7 @@ async fn main() {
         .unwrap_or_else(|_| b"trak-insecure-default-development-secret-key-32b!".to_vec());
 
     spawn_midnight_ticker(pool.clone());
+    trak::backend::notification_worker::spawn_notification_ticker(pool.clone());
 
     let app_state = AppState {
         pool: pool.clone(),
@@ -33,6 +34,10 @@ async fn main() {
     };
 
     let app = Router::new()
+        .route(
+            "/api/lockdown/:secret",
+            axum::routing::get(trak::backend::lockdown_api::get_lockdown_status_handler),
+        )
         .leptos_routes_with_context(
             &app_state,
             routes,
@@ -51,7 +56,7 @@ async fn main() {
             "/pkg",
             ServeDir::new(format!("{}/pkg", leptos_options.site_root)),
         )
-        .fallback(leptos_axum::file_and_error_handler(shell))
+        .fallback(leptos_axum::file_and_error_handler::<AppState, _>(shell))
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();

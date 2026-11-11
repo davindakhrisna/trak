@@ -133,3 +133,34 @@ impl ThemeMode {
         }
     }
 }
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct UserSettings {
+    pub user_id: String,
+    pub ntfy_enabled: bool,
+    pub ntfy_server: String,
+    pub ntfy_topic: String,
+    pub notify_start: bool,
+    pub notify_1h: bool,
+    pub notify_25m: bool,
+    pub notify_crossed: bool,
+    pub lockdown_enabled: bool,
+    pub lockdown_secret: String,
+    pub locked_until: Option<String>,
+    pub missed_deadlines_today: i64,
+    pub timezone: String,
+    pub adguard_enabled: bool,
+    pub adguard_url: String,
+    pub adguard_username: String,
+    pub adguard_password: String,
+    pub adguard_client_id: String,
+    pub adguard_services: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LockdownStatus {
+    pub locked: bool,
+    pub locked_until: Option<String>,
+    pub missed_deadlines: i64,
+    pub reason: String,
+}

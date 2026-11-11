@@ -11,18 +11,31 @@ pub fn UsersPage() -> impl IntoView {
     let (as_admin, set_as_admin) = signal(false);
     let (feedback, set_feedback) = signal(Option::<String>::None);
 
+    Effect::new(move |_| {
+        leptos::task::spawn_local(async move {
+            if let Ok(users) = crate::backend::api_users::fetch_users_list().await {
+                store.users.set(users);
+            }
+        });
+    });
+
     let on_create = move |ev: SubmitEvent| {
         ev.prevent_default();
-        match store.admin_create_user(username.get(), password.get(), as_admin.get()) {
-            Ok(()) => {
-                let created_name = username.get();
-                set_username.set(String::new());
-                set_password.set(String::new());
-                set_as_admin.set(false);
-                set_feedback.set(Some(format!("Added user '{}'.", created_name.trim())));
+        let u = username.get();
+        let p = password.get();
+        let adm = as_admin.get();
+        leptos::task::spawn_local(async move {
+            match crate::backend::api_users::admin_create_user(u.clone(), p, adm).await {
+                Ok(new_acc) => {
+                    store.users.update(|list| list.push(new_acc));
+                    set_username.set(String::new());
+                    set_password.set(String::new());
+                    set_as_admin.set(false);
+                    set_feedback.set(Some(format!("Added user '{}'.", u.trim())));
+                }
+                Err(err) => set_feedback.set(Some(err.to_string())),
             }
-            Err(err) => set_feedback.set(Some(err)),
-        }
+        });
     };
 
     view! {
@@ -157,7 +170,23 @@ pub fn UsersPage() -> impl IntoView {
                                                             <div class="flex items-center gap-1.5 shrink-0">
                                                                 <button
                                                                     type="button"
-                                                                    on:click=move |_| store.admin_toggle_role(&uid_toggle)
+                                                                    on:click={
+                                                                        let uid = uid_toggle.clone();
+                                                                        move |_| {
+                                                                            let uid_c = uid.clone();
+                                                                            leptos::task::spawn_local(async move {
+                                                                                if let Ok(new_role) =
+                                                                                    crate::backend::api_users::admin_toggle_user_role(uid_c.clone()).await
+                                                                                {
+                                                                                    store.users.update(|list| {
+                                                                                        if let Some(u) = list.iter_mut().find(|u| u.id == uid_c) {
+                                                                                            u.role = new_role;
+                                                                                        }
+                                                                                    });
+                                                                                }
+                                                                            });
+                                                                        }
+                                                                    }
                                                                     class="btn-monolith-ghost shrink-0"
                                                                 >
                                                                     {if role.is_admin() {
@@ -169,7 +198,17 @@ pub fn UsersPage() -> impl IntoView {
                                                                 <button
                                                                     type="button"
                                                                     aria-label="Remove user"
-                                                                    on:click=move |_| store.admin_remove_user(&uid_remove)
+                                                                    on:click={
+                                                                        let uid = uid_remove.clone();
+                                                                        move |_| {
+                                                                            let uid_c = uid.clone();
+                                                                            leptos::task::spawn_local(async move {
+                                                                                if crate::backend::api_users::admin_delete_user(uid_c.clone()).await.is_ok() {
+                                                                                    store.users.update(|list| list.retain(|u| u.id != uid_c));
+                                                                                }
+                                                                            });
+                                                                        }
+                                                                    }
                                                                     class="w-7 h-7 border border-gray text-gray hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white font-mono text-xs flex items-center justify-center cursor-pointer shrink-0"
                                                                 >
                                                                     "×"

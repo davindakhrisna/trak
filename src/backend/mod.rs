@@ -1,10 +1,18 @@
+pub mod adguard;
 pub mod api_auth;
+pub mod api_settings;
 pub mod api_tasks;
 pub mod api_templates;
 pub mod api_users;
 pub mod auth;
 pub mod db;
+pub mod lockdown_api;
+pub mod lockdown_enforcer;
+pub mod notification_task_checker;
+pub mod notification_worker;
+pub mod ntfy;
 pub mod provision;
+pub mod settings_db;
 
 #[cfg(feature = "ssr")]
 use sqlx::{Pool, Sqlite};

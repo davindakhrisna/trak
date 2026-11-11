@@ -1,4 +1,6 @@
-use crate::domain::{UserAccount, UserRole};
+use crate::domain::UserAccount;
+#[cfg(feature = "ssr")]
+use crate::domain::UserRole;
 use leptos::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -26,13 +28,12 @@ pub async fn check_auth() -> Result<AuthStatus, ServerFnError> {
     let claims = get_auth_claims_from_context(&state);
 
     if let Some(c) = claims {
-        let user_row = sqlx::query(
-            "SELECT id, username, role, is_first_admin FROM users WHERE id = ?",
-        )
-        .bind(&c.user_id)
-        .fetch_optional(&state.pool)
-        .await
-        .map_err(|e| ServerFnError::new(e.to_string()))?;
+        let user_row =
+            sqlx::query("SELECT id, username, role, is_first_admin FROM users WHERE id = ?")
+                .bind(&c.user_id)
+                .fetch_optional(&state.pool)
+                .await
+                .map_err(|e| ServerFnError::new(e.to_string()))?;
 
         if let Some(row) = user_row {
             let role_str: String = row.get("role");
@@ -83,15 +84,21 @@ pub async fn register_first_admin(
         .get("c");
 
     if count > 0 {
-        return Err(ServerFnError::new("Registration is closed. An admin already exists."));
+        return Err(ServerFnError::new(
+            "Registration is closed. An admin already exists.",
+        ));
     }
 
     let uname = username.trim().to_string();
     if uname.is_empty() || uname.len() > 32 {
-        return Err(ServerFnError::new("Username must be between 1 and 32 characters."));
+        return Err(ServerFnError::new(
+            "Username must be between 1 and 32 characters.",
+        ));
     }
     if password.is_empty() || password.len() > 128 {
-        return Err(ServerFnError::new("Password must be between 1 and 128 characters."));
+        return Err(ServerFnError::new(
+            "Password must be between 1 and 128 characters.",
+        ));
     }
 
     let pw_hash = hash_password(&password).map_err(ServerFnError::new)?;

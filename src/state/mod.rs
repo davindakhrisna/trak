@@ -9,6 +9,7 @@ pub struct AppStore {
     pub users: RwSignal<Vec<UserAccount>>,
     pub current_user_id: RwSignal<Option<String>>,
     pub first_register_claimed: RwSignal<bool>,
+    pub auth_initialized: RwSignal<bool>,
     pub today_tasks: RwSignal<Vec<TodayTask>>,
     pub templates: RwSignal<Vec<RecurringTemplate>>,
     pub selected_day: RwSignal<Weekday>,
@@ -16,14 +17,13 @@ pub struct AppStore {
 }
 
 pub fn provide_app_store() -> AppStore {
-    let templates_init = seed::default_templates();
-    let today_init = seed::default_today_tasks(&templates_init);
     let store = AppStore {
-        users: RwSignal::new(seed::default_users()),
-        current_user_id: RwSignal::new(Some("1".to_string())),
+        users: RwSignal::new(Vec::new()),
+        current_user_id: RwSignal::new(None),
         first_register_claimed: RwSignal::new(false),
-        today_tasks: RwSignal::new(today_init),
-        templates: RwSignal::new(templates_init),
+        auth_initialized: RwSignal::new(false),
+        today_tasks: RwSignal::new(Vec::new()),
+        templates: RwSignal::new(Vec::new()),
         selected_day: RwSignal::new(Weekday::today()),
         theme_mode: RwSignal::new(ThemeMode::System),
     };

@@ -8,8 +8,8 @@ pub async fn fetch_users_list() -> Result<Vec<UserAccount>, ServerFnError> {
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     if !claims.is_admin() {
         return Err(ServerFnError::new("Forbidden: Admin privileges required."));
@@ -62,8 +62,8 @@ pub async fn admin_create_user(
     use uuid::Uuid;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     if !claims.is_admin() {
         return Err(ServerFnError::new("Forbidden: Admin privileges required."));
@@ -71,25 +71,36 @@ pub async fn admin_create_user(
 
     let clean_user = username.trim().to_string();
     if clean_user.len() < 3 || clean_user.len() > 32 {
-        return Err(ServerFnError::new("Username must be between 3 and 32 characters."));
+        return Err(ServerFnError::new(
+            "Username must be between 3 and 32 characters.",
+        ));
     }
     if password.len() < 4 || password.len() > 128 {
-        return Err(ServerFnError::new("Password must be between 4 and 128 characters."));
+        return Err(ServerFnError::new(
+            "Password must be between 4 and 128 characters.",
+        ));
     }
 
-    let exists: i64 = sqlx::query("SELECT COUNT(*) as c FROM users WHERE LOWER(username) = LOWER(?)")
-        .bind(&clean_user)
-        .fetch_one(&state.pool)
-        .await
-        .map_err(|e| ServerFnError::new(e.to_string()))?
-        .get("c");
+    let exists: i64 =
+        sqlx::query("SELECT COUNT(*) as c FROM users WHERE LOWER(username) = LOWER(?)")
+            .bind(&clean_user)
+            .fetch_one(&state.pool)
+            .await
+            .map_err(|e| ServerFnError::new(e.to_string()))?
+            .get("c");
 
     if exists > 0 {
-        return Err(ServerFnError::new("A user with that username already exists."));
+        return Err(ServerFnError::new(
+            "A user with that username already exists.",
+        ));
     }
 
     let pw_hash = hash_password(&password).map_err(ServerFnError::new)?;
-    let role = if as_admin { UserRole::Admin } else { UserRole::User };
+    let role = if as_admin {
+        UserRole::Admin
+    } else {
+        UserRole::User
+    };
     let new_id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
 
@@ -124,8 +135,8 @@ pub async fn admin_toggle_user_role(target_id: String) -> Result<UserRole, Serve
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     if !claims.is_admin() {
         return Err(ServerFnError::new("Forbidden: Admin privileges required."));
@@ -140,7 +151,9 @@ pub async fn admin_toggle_user_role(target_id: String) -> Result<UserRole, Serve
     let r = row.ok_or_else(|| ServerFnError::new("User not found."))?;
     let is_first: i64 = r.get("is_first_admin");
     if is_first == 1 {
-        return Err(ServerFnError::new("Cannot modify the root administrator's role."));
+        return Err(ServerFnError::new(
+            "Cannot modify the root administrator's role.",
+        ));
     }
 
     let current_role: String = r.get("role");
@@ -167,8 +180,8 @@ pub async fn admin_delete_user(target_id: String) -> Result<(), ServerFnError> {
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims = get_auth_claims_from_context(&state)
-        .ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+    let claims =
+        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     if !claims.is_admin() {
         return Err(ServerFnError::new("Forbidden: Admin privileges required."));

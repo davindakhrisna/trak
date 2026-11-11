@@ -1,4 +1,4 @@
-use crate::components::MonolithShell;
+use crate::components::{MonolithShell, TemplateItemCell};
 use crate::domain::Weekday;
 use crate::state::use_app_store;
 use leptos::ev::SubmitEvent;
@@ -21,6 +21,14 @@ pub fn TemplatesPage() -> impl IntoView {
             .collect::<Vec<_>>()
     });
 
+    Effect::new(move |_| {
+        leptos::task::spawn_local(async move {
+            if let Ok(list) = crate::backend::api_templates::fetch_templates().await {
+                store.templates.set(list);
+            }
+        });
+    });
+
     let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
         let text = draft.get();
@@ -29,16 +37,62 @@ pub fn TemplatesPage() -> impl IntoView {
             let st_opt = if st.trim().is_empty() { None } else { Some(st) };
             let dl = deadline.get();
             let dl_opt = if dl.trim().is_empty() { None } else { Some(dl) };
-            store.add_template(store.selected_day.get(), text, st_opt, dl_opt);
             set_draft.set(String::new());
             set_start_time.set(String::new());
             set_deadline.set(String::new());
+
+            let sel_day = store.selected_day.get();
+            let text_c = text.clone();
+            let st_c = st_opt.clone();
+            let dl_c = dl_opt.clone();
+            leptos::task::spawn_local(async move {
+                if let Ok(tpl) =
+                    crate::backend::api_templates::create_template(sel_day, text_c, st_c, dl_c)
+                        .await
+                {
+                    store.templates.update(|l| l.push(tpl));
+                } else {
+                    store.add_template(sel_day, text, st_opt, dl_opt);
+                }
+            });
         }
     };
 
+    let on_delete_template = Callback::new(move |id: String| {
+        store.remove_template(&id);
+        leptos::task::spawn_local(async move {
+            let _ = crate::backend::api_templates::delete_template(id).await;
+        });
+    });
+
     view! {
         <MonolithShell active_path="/templates" wide=true>
-            <section class="w-full flex flex-col items-center justify-center gap-6">
+            {move || {
+                if store.auth_initialized.get() && store.current_user_id.get().is_none() {
+                    view! {
+                        <section class="w-full border border-black dark:border-white p-8 flex flex-col items-center justify-center gap-4 bg-white dark:bg-black">
+                            <h1 class="text-2xl font-bold text-black dark:text-white">
+                                {if store.has_any_user() { "Sign In Required" } else { "Welcome to Trak" }}
+                            </h1>
+                            <p class="text-sm text-gray">
+                                {if store.has_any_user() {
+                                    "Sign in to manage recurring template schedules."
+                                } else {
+                                    "Setup the initial administrator account to begin."
+                                }}
+                            </p>
+                            <a
+                                href=if store.has_any_user() { "/login" } else { "/register" }
+                                class="btn-monolith-solid"
+                            >
+                                {if store.has_any_user() { "Go to Sign in" } else { "Setup root admin" }}
+                            </a>
+                        </section>
+                    }
+                        .into_any()
+                } else {
+                    view! {
+                        <section class="w-full flex flex-col items-center justify-center gap-6">
                 <div class="w-full flex flex-col items-center justify-center gap-1">
                     <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">
                         "Templates"
@@ -57,14 +111,7 @@ pub fn TemplatesPage() -> impl IntoView {
                         .into_iter()
                         .map(|day| {
                             let is_selected = move || store.selected_day.get() == day;
-                            let count_for_day = move || {
-                                store
-                                    .templates
-                                    .get()
-                                    .iter()
-                                    .filter(|t| t.day == day)
-                                    .count()
-                            };
+                            let count_for_day = move || store.templates.get().iter().filter(|t| t.day == day).count();
 
                             view! {
                                 <button
@@ -153,41 +200,11 @@ pub fn TemplatesPage() -> impl IntoView {
                                     {list
                                         .into_iter()
                                         .map(|tpl| {
-                                            let tpl_id = tpl.id;
-                                            let title_text = tpl.title.clone();
-                                            let day_code = tpl.day.code();
-                                            let time_badge = match (&tpl.start, &tpl.deadline) {
-                                                (Some(s), Some(d)) => Some(format!("{} - {}", s, d)),
-                                                (Some(s), None) => Some(s.clone()),
-                                                (None, Some(d)) => Some(d.clone()),
-                                                (None, None) => None,
-                                            };
-                                            let del_label = format!("Delete {}", tpl.title);
-
                                             view! {
-                                                <li class="cell-row">
-                                                    <span class="font-mono text-[11px] text-gray border border-gray px-1.5 py-0.5 shrink-0">
-                                                        {day_code}
-                                                    </span>
-                                                    <span class="flex-1 min-w-0 px-1 text-left text-sm text-black dark:text-white font-medium break-words">
-                                                        {title_text}
-                                                    </span>
-                                                    {time_badge.map(|tb| {
-                                                        view! {
-                                                            <span class="font-mono text-[10px] text-gray border border-gray px-1.5 py-0.5 shrink-0 whitespace-nowrap">
-                                                                {tb}
-                                                            </span>
-                                                        }
-                                                    })}
-                                                    <button
-                                                        type="button"
-                                                        aria-label=del_label
-                                                        on:click=move |_| store.remove_template(&tpl_id)
-                                                        class="shrink-0 w-6 h-6 flex items-center justify-center font-mono text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
-                                                    >
-                                                        "×"
-                                                    </button>
-                                                </li>
+                                                <TemplateItemCell
+                                                    tpl=tpl
+                                                    on_delete=on_delete_template
+                                                />
                                             }
                                         })
                                         .collect_view()}
@@ -197,7 +214,11 @@ pub fn TemplatesPage() -> impl IntoView {
                         }
                     }}
                 </div>
-            </section>
+                        </section>
+                    }
+                        .into_any()
+                }
+            }}
         </MonolithShell>
     }
 }
