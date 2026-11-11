@@ -119,7 +119,7 @@ pub fn TodayPage() -> impl IntoView {
                                 maxlength="20"
                                 prop:value=move || start_time.get()
                                 on:input=move |ev| set_start_time.set(event_target_value(&ev))
-                                class="w-1/2 sm:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                                class="flex-1 min-w-0 sm:flex-none sm:w-20 md:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
                             />
                             <input
                                 type="text"
@@ -128,7 +128,7 @@ pub fn TodayPage() -> impl IntoView {
                                 maxlength="20"
                                 prop:value=move || deadline.get()
                                 on:input=move |ev| set_deadline.set(event_target_value(&ev))
-                                class="w-1/2 sm:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                                class="flex-1 min-w-0 sm:flex-none sm:w-20 md:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
                             />
                             <button
                                 type="submit"

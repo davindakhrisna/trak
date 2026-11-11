@@ -10,9 +10,9 @@ pub fn MonolithShell(
     children: Children,
 ) -> impl IntoView {
     let spine_width_class = if wide {
-        "w-full md:w-[780px] max-w-spine-wide"
+        "w-full max-w-spine-wide lg:w-[780px]"
     } else {
-        "w-full md:w-[440px] max-w-spine"
+        "w-full max-w-spine lg:w-[440px]"
     };
 
     if hide_nav {
@@ -37,12 +37,12 @@ pub fn MonolithShell(
     }
 
     view! {
-        <div class="min-h-screen w-full overflow-x-hidden bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-start md:justify-center transition-colors duration-75">
+        <div class="min-h-screen w-full overflow-x-hidden bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-start transition-colors duration-75">
             <MobileNav active_path=active_path />
-            <div class="w-full flex-1 md:flex-none flex flex-col items-center justify-start md:justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-12">
-                <div class="w-full md:w-fit max-w-full mx-auto flex flex-col md:flex-row items-stretch justify-center gap-6 lg:gap-8">
+            <div class="w-full flex-1 lg:flex-none flex flex-col items-center justify-start px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-12 my-auto">
+                <div class="w-full lg:w-fit max-w-full mx-auto flex flex-col lg:flex-row items-stretch justify-center gap-6 lg:gap-8">
                     <DesktopSidebar active_path=active_path />
-                    <main class="w-full flex-1 flex flex-col items-stretch md:items-center justify-start md:justify-center text-center">
+                    <main class="w-full flex-1 flex flex-col items-stretch lg:items-center justify-start text-center">
                         <div class=format!("{} w-full max-w-full mx-auto flex flex-col items-center text-center", spine_width_class)>
                             {children()}
                         </div>

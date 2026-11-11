@@ -38,7 +38,7 @@ pub fn DesktopSidebar(active_path: &'static str) -> impl IntoView {
     };
 
     view! {
-        <aside class="hidden md:flex flex-col justify-between w-40 lg:w-44 shrink-0 text-left border-r border-black dark:border-white pr-6 py-1 self-stretch min-h-[280px] max-h-[calc(100vh-6rem)] sticky top-8 lg:top-12 gap-6">
+        <aside class="hidden lg:flex flex-col justify-between w-40 lg:w-44 shrink-0 text-left border-r border-black dark:border-white pr-6 py-1 self-stretch min-h-[280px] max-h-[calc(100vh-6rem)] sticky top-8 lg:top-12 gap-6">
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-0.5 border-b border-black dark:border-white pb-3 text-left">
                     <span class="font-sans font-bold text-lg tracking-tighter text-black dark:text-white">
@@ -101,16 +101,23 @@ pub fn MobileNav(active_path: &'static str) -> impl IntoView {
     };
 
     view! {
-        <header class="flex md:hidden w-full flex-col border-b border-black dark:border-white bg-white dark:bg-black sticky top-0 z-30">
-            <div class="w-full flex items-center justify-between px-4 py-2 border-b border-black dark:border-white">
-                <span class="font-sans font-bold text-base tracking-tight">"TRAK"</span>
-                <div class="flex items-center gap-2 font-mono text-[11px] text-gray">
+        <header class="flex lg:hidden w-full flex-col border-b border-black dark:border-white bg-white dark:bg-black sticky top-0 z-30">
+            <div class="w-full flex items-center justify-between px-4 sm:px-6 py-2 sm:py-2.5 border-b border-black dark:border-white">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <span class="font-sans font-bold text-base sm:text-lg tracking-tight">"TRAK"</span>
+                    <span class="hidden sm:inline-block font-mono text-[9px] text-gray uppercase tracking-wider">
+                        "Task & Discipline"
+                    </span>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3 font-mono text-[11px] text-gray">
                     {move || {
                         if let Some(user) = store.current_user() {
                             let display_name = user.username.clone();
                             let title_name = user.username;
                             view! {
-                                <span class="truncate max-w-[120px]" title=title_name>{display_name}</span>
+                                <span class="truncate max-w-[120px] sm:max-w-[180px] font-medium text-black dark:text-white" title=title_name>
+                                    {display_name}
+                                </span>
                                 <span>"·"</span>
                                 <a href="/login" on:click=on_sign_out class="hover:text-black dark:hover:text-white hover:underline cursor-pointer">"Out"</a>
                                 <span>"·"</span>
@@ -126,7 +133,7 @@ pub fn MobileNav(active_path: &'static str) -> impl IntoView {
                 </div>
             </div>
 
-            <nav aria-label="Mobile navigation" class="w-full flex items-center justify-start gap-1 px-3 py-1.5 overflow-x-auto scroll-monolith">
+            <nav aria-label="Mobile navigation" class="w-full flex items-center justify-start sm:justify-center gap-1.5 px-3 sm:px-6 py-1.5 sm:py-2 overflow-x-auto scroll-monolith">
                 <a href="/" class=mobile_link_class(active_path == "/")>"Today"</a>
                 <a href="/templates" class=mobile_link_class(active_path == "/templates")>"Templates"</a>
                 <a href="/settings" class=mobile_link_class(active_path == "/settings")>"Settings"</a>
