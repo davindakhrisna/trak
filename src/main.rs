@@ -21,9 +21,10 @@ async fn main() {
         .expect("Failed to initialize SQLite database");
 
     let secret = std::env::var("SESSION_SECRET")
+        .or_else(|_| std::env::var("JWT_SECRET"))
         .map(|s| s.into_bytes())
         .unwrap_or_else(|_| {
-            eprintln!("⚠️ [SECURITY] SESSION_SECRET unset. Generating strong random ephemeral key for this session.");
+            eprintln!("⚠️ [SECURITY] SESSION_SECRET/JWT_SECRET unset. Generating strong random ephemeral key for this session.");
             let mut k = vec![0u8; 32];
             use argon2::password_hash::rand_core::{OsRng, RngCore};
             OsRng.fill_bytes(&mut k);
