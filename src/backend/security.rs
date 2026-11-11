@@ -175,7 +175,7 @@ pub async fn enforce_route_auth(
 
     let path = req.uri().path();
 
-    if path.starts_with("/pkg") || path.starts_with("/api") || path == "/favicon.ico" {
+    if path.starts_with("/pkg") || path.starts_with("/api") || path.starts_with("/favicon") {
         return next.run(req).await;
     }
 
