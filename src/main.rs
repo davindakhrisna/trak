@@ -22,7 +22,13 @@ async fn main() {
 
     let secret = std::env::var("SESSION_SECRET")
         .map(|s| s.into_bytes())
-        .unwrap_or_else(|_| b"trak-insecure-default-development-secret-key-32b!".to_vec());
+        .unwrap_or_else(|_| {
+            eprintln!("⚠️ [SECURITY] SESSION_SECRET unset. Generating strong random ephemeral key for this session.");
+            let mut k = vec![0u8; 32];
+            use argon2::password_hash::rand_core::{OsRng, RngCore};
+            OsRng.fill_bytes(&mut k);
+            k
+        });
 
     spawn_midnight_ticker(pool.clone());
     trak::backend::notification_worker::spawn_notification_ticker(pool.clone());
@@ -57,6 +63,10 @@ async fn main() {
             ServeDir::new(format!("{}/pkg", leptos_options.site_root)),
         )
         .fallback(leptos_axum::file_and_error_handler::<AppState, _>(shell))
+        .layer(axum::middleware::from_fn(
+            trak::backend::security::apply_security_headers,
+        ))
+        .layer(axum::extract::DefaultBodyLimit::max(64 * 1024))
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();

@@ -4,7 +4,6 @@ use leptos::prelude::*;
 pub enum GuidePlatform {
     Ios,
     Android,
-    Adguard,
     Ntfy,
 }
 
@@ -29,7 +28,6 @@ pub fn SettingsGuideTabs(api_url: Signal<String>, topic_url: Signal<String>) -> 
                 <div class="flex items-center gap-1 flex-wrap">
                     <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Ios) class=move || tab_class(GuidePlatform::Ios)>"iOS (Shortcuts)"</button>
                     <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Android) class=move || tab_class(GuidePlatform::Android)>"Android (MacroDroid)"</button>
-                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Adguard) class=move || tab_class(GuidePlatform::Adguard)>"AdGuard Home"</button>
                     <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Ntfy) class=move || tab_class(GuidePlatform::Ntfy)>"Ntfy Pairing"</button>
                 </div>
             </div>
@@ -51,28 +49,15 @@ pub fn SettingsGuideTabs(api_url: Signal<String>, topic_url: Signal<String>) -> 
                 }.into_any(),
                 GuidePlatform::Android => view! {
                     <div class="flex flex-col gap-2 font-sans text-xs text-black dark:text-white leading-relaxed">
-                        <p class="font-mono text-[11px] text-gray uppercase">"Enforce lockdown on Android using MacroDroid or Tasker:"</p>
+                        <p class="font-mono text-[11px] text-gray uppercase">"Enforce lockdown on Android using MacroDroid (100% Free - 1 Macro Needed):"</p>
                         <ol class="list-decimal pl-5 flex flex-col gap-1 text-black dark:text-white">
-                            <li>"Install " <strong class="font-mono">"MacroDroid"</strong> " from Google Play."</li>
-                            <li>"Trigger: " <strong class="font-mono">"Application Launched"</strong> " -> Select distraction apps."</li>
+                            <li>"Install " <strong class="font-mono">"MacroDroid"</strong> " from Google Play (free tier allows 5 macros; Trak needs only 1)."</li>
+                            <li>"Tap " <strong class="font-mono">"Add Macro"</strong> " -> Trigger: " <strong class="font-mono">"Application Launched"</strong> " -> Select distraction apps."</li>
                             <li>"Action: " <strong class="font-mono">"HTTP Request (GET)"</strong> " -> Set target URL to:"
                                 <div class="my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all">{move || api_url.get()}</div>
                             </li>
                             <li>"Action: " <strong class="font-mono">"If HTTP Response"</strong> " contains " <code class="font-mono bg-gray/20 px-1">"\"locked\":true"</code> ":"</li>
-                            <li>"Action: " <strong class="font-mono">"Press Home Button"</strong> " + Display Toast: " <code class="font-mono bg-gray/20 px-1">"TRAK LOCKDOWN ACTIVE"</code> "."</li>
-                        </ol>
-                    </div>
-                }.into_any(),
-                GuidePlatform::Adguard => view! {
-                    <div class="flex flex-col gap-2 font-sans text-xs text-black dark:text-white leading-relaxed">
-                        <p class="font-mono text-[11px] text-gray uppercase">"Automated DNS-level lockdown via AdGuard Home:"</p>
-                        <ol class="list-decimal pl-5 flex flex-col gap-1 text-black dark:text-white">
-                            <li>"Connect your mobile devices to AdGuard Home via Encrypted DNS (DoH/DoT) profile or router DNS."</li>
-                            <li>"Enter your AdGuard URL (e.g. " <code class="font-mono bg-gray/20 px-1">"http://192.168.1.100:80"</code> ") and admin credentials above."</li>
-                            <li>"Select distraction services to block (Instagram, TikTok, Twitter/X, Reddit, YouTube)."</li>
-                            <li>"Click " <strong class="font-mono">"Test AdGuard Connection"</strong> " to verify reachability and authentication."</li>
-                            <li>"Save settings. When a deadline is crossed, AdGuard blocks selected services immediately."</li>
-                            <li>"DNS access is restored automatically when punishment expires or via Emergency Reset."</li>
+                            <li>"Action: " <strong class="font-mono">"Press Home Button"</strong> " (or Kill Process) + Toast: " <code class="font-mono bg-gray/20 px-1">"TRAK LOCKDOWN ACTIVE"</code> "."</li>
                         </ol>
                     </div>
                 }.into_any(),

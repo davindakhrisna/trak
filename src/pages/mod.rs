@@ -1,7 +1,6 @@
 pub mod auth;
 pub mod register;
 pub mod settings;
-pub mod settings_adguard;
 pub mod settings_guide;
 pub mod settings_lockdown;
 pub mod settings_ntfy;

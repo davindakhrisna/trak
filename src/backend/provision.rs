@@ -33,6 +33,7 @@ pub async fn provision_for_user(
         let start_time: Option<String> = tpl.get("start_time");
         let deadline: Option<String> = tpl.get("deadline");
 
+        let mut tx = pool.begin().await?;
         let log_id = Uuid::new_v4().to_string();
         let log_res = sqlx::query(
             r#"
@@ -44,7 +45,7 @@ pub async fn provision_for_user(
         .bind(user_id)
         .bind(&tpl_id)
         .bind(&date_str)
-        .execute(pool)
+        .execute(&mut *tx)
         .await?;
 
         if log_res.rows_affected() > 0 {
@@ -65,11 +66,12 @@ pub async fn provision_for_user(
             .bind(&deadline)
             .bind(&date_str)
             .bind(&now)
-            .execute(pool)
+            .execute(&mut *tx)
             .await?;
 
             count += 1;
         }
+        tx.commit().await?;
     }
 
     Ok(count)

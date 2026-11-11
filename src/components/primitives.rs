@@ -1,4 +1,4 @@
-use crate::components::nav::CenteredNav;
+use crate::components::nav::AppNavigation;
 use crate::components::theme::ThemeSelector;
 use leptos::prelude::*;
 
@@ -15,30 +15,33 @@ pub fn MonolithShell(
         "monolith-spine"
     };
 
-    view! {
-        <div class="monolith-page">
-            <div class=spine_class>
-                {if !hide_nav {
-                    view! { <CenteredNav active_path=active_path /> }.into_any()
-                } else {
-                    ().into_any()
-                }}
-                <main class="w-full flex flex-col items-center justify-center text-center">
-                    {children()}
-                </main>
-                {if hide_nav {
-                    view! {
-                        <footer class="mt-8 flex items-center justify-center">
-                            <ThemeSelector />
-                        </footer>
-                    }
-                        .into_any()
-                } else {
-                    ().into_any()
-                }}
+    if hide_nav {
+        return view! {
+            <div class="monolith-page">
+                <div class=spine_class>
+                    <main class="w-full flex flex-col items-center justify-center text-center">
+                        {children()}
+                    </main>
+                    <footer class="mt-8 flex items-center justify-center">
+                        <ThemeSelector />
+                    </footer>
+                </div>
             </div>
+        }
+        .into_any();
+    }
+
+    view! {
+        <div class="min-h-screen w-full bg-white dark:bg-black text-black dark:text-white flex flex-col md:flex-row transition-colors duration-75">
+            <AppNavigation active_path=active_path />
+            <main class="flex-1 min-w-0 flex flex-col items-center justify-start px-4 py-8 md:py-12 overflow-y-auto">
+                <div class=spine_class>
+                    {children()}
+                </div>
+            </main>
         </div>
     }
+    .into_any()
 }
 
 #[component]

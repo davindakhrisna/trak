@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 pub mod backend;
 pub mod components;
 pub mod domain;
@@ -42,30 +44,6 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 pub fn App() -> impl IntoView {
     provide_meta_context();
     let store = provide_app_store();
-
-    #[cfg(feature = "ssr")]
-    {
-        if let Some(state) = leptos::prelude::use_context::<crate::backend::AppState>() {
-            if let Some(claims) = crate::backend::auth::get_auth_claims_from_context(&state) {
-                let role = if claims.role == "ADMIN" {
-                    crate::domain::UserRole::Admin
-                } else {
-                    crate::domain::UserRole::User
-                };
-                store.current_user_id.set(Some(claims.user_id.clone()));
-                store.users.update(|list| {
-                    list.push(crate::domain::UserAccount {
-                        id: claims.user_id.clone(),
-                        username: claims.username.clone(),
-                        password: String::new(),
-                        role,
-                        is_first_admin: false,
-                    });
-                });
-                store.auth_initialized.set(true);
-            }
-        }
-    }
 
     Effect::new(move |_| {
         leptos::task::spawn_local(async move {

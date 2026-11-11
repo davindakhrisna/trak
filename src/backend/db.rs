@@ -10,6 +10,7 @@ pub async fn init_db(database_url: &str) -> Result<Pool<Sqlite>, sqlx::Error> {
     let options = SqliteConnectOptions::from_str(database_url)?
         .create_if_missing(true)
         .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+        .busy_timeout(std::time::Duration::from_secs(5))
         .foreign_keys(true);
 
     let pool = SqlitePoolOptions::new()
@@ -80,13 +81,7 @@ async fn migrate(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
             lockdown_enabled INTEGER NOT NULL DEFAULT 1,
             lockdown_secret TEXT UNIQUE NOT NULL,
             locked_until TEXT,
-            timezone TEXT NOT NULL DEFAULT 'UTC',
-            adguard_enabled INTEGER NOT NULL DEFAULT 0,
-            adguard_url TEXT NOT NULL DEFAULT '',
-            adguard_username TEXT NOT NULL DEFAULT '',
-            adguard_password TEXT NOT NULL DEFAULT '',
-            adguard_client_id TEXT NOT NULL DEFAULT '',
-            adguard_services TEXT NOT NULL DEFAULT 'instagram,tiktok,twitter,reddit,youtube'
+            timezone TEXT NOT NULL DEFAULT 'UTC'
         );
 
         CREATE TABLE IF NOT EXISTS notification_log (
@@ -101,36 +96,11 @@ async fn migrate(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
 
         CREATE INDEX IF NOT EXISTS idx_notif_log_user ON notification_log(user_id, task_date);
         CREATE INDEX IF NOT EXISTS idx_user_settings_secret ON user_settings(lockdown_secret);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_single_first_admin ON users(is_first_admin) WHERE is_first_admin = 1;
         "#,
     )
     .execute(pool)
     .await?;
-
-    let _ = sqlx::query(
-        "ALTER TABLE user_settings ADD COLUMN adguard_enabled INTEGER NOT NULL DEFAULT 0",
-    )
-    .execute(pool)
-    .await;
-    let _ =
-        sqlx::query("ALTER TABLE user_settings ADD COLUMN adguard_url TEXT NOT NULL DEFAULT ''")
-            .execute(pool)
-            .await;
-    let _ = sqlx::query(
-        "ALTER TABLE user_settings ADD COLUMN adguard_username TEXT NOT NULL DEFAULT ''",
-    )
-    .execute(pool)
-    .await;
-    let _ = sqlx::query(
-        "ALTER TABLE user_settings ADD COLUMN adguard_password TEXT NOT NULL DEFAULT ''",
-    )
-    .execute(pool)
-    .await;
-    let _ = sqlx::query(
-        "ALTER TABLE user_settings ADD COLUMN adguard_client_id TEXT NOT NULL DEFAULT ''",
-    )
-    .execute(pool)
-    .await;
-    let _ = sqlx::query("ALTER TABLE user_settings ADD COLUMN adguard_services TEXT NOT NULL DEFAULT 'instagram,tiktok,twitter,reddit,youtube'").execute(pool).await;
 
     Ok(())
 }

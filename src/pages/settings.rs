@@ -1,6 +1,5 @@
 use crate::components::MonolithShell;
 use crate::domain::UserSettings;
-use crate::pages::settings_adguard::SettingsAdguardCard;
 use crate::pages::settings_guide::SettingsGuideTabs;
 use crate::pages::settings_lockdown::SettingsLockdownCard;
 use crate::pages::settings_ntfy::SettingsNtfyCard;
@@ -33,7 +32,6 @@ pub fn SettingsPage() -> impl IntoView {
             curr.ntfy_server = curr.ntfy_server.trim().to_string();
             curr.ntfy_topic = curr.ntfy_topic.trim().to_string();
             curr.timezone = curr.timezone.trim().to_string();
-            curr.adguard_url = curr.adguard_url.trim().to_string();
             leptos::task::spawn_local(async move {
                 match crate::backend::api_settings::update_settings(curr.clone()).await {
                     Ok(saved) => {
@@ -125,7 +123,7 @@ pub fn SettingsPage() -> impl IntoView {
                     view! {
                         <section class="w-full border border-black dark:border-white p-8 flex flex-col items-center justify-center gap-4 bg-white dark:bg-black">
                             <h1 class="text-2xl font-bold text-black dark:text-white">"Sign In Required"</h1>
-                            <p class="text-sm text-gray">"Sign in to manage notifications, AdGuard Home, and lockdown."</p>
+                            <p class="text-sm text-gray">"Sign in to manage notifications and lockdown."</p>
                             <a href="/login" class="btn-monolith-solid">"Go to Sign in"</a>
                         </section>
                     }.into_any()
@@ -134,12 +132,11 @@ pub fn SettingsPage() -> impl IntoView {
                         <section class="w-full flex flex-col items-center justify-center gap-6">
                             <div class="w-full flex flex-col items-center justify-center gap-1">
                                 <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">"Settings"</h1>
-                                <p class="text-xs text-gray">"Configure Ntfy alerts, AdGuard Home DNS enforcer, and mobile lockdown."</p>
+                                <p class="text-xs text-gray">"Configure Ntfy alerts and mobile lockdown."</p>
                             </div>
 
-                            <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-5 items-start text-left">
-                                <SettingsNtfyCard settings=settings set_settings=set_settings on_save=on_save on_test_ntfy=on_test_ntfy on_regen_topic=on_regen_topic />
-                                <SettingsAdguardCard settings=settings set_settings=set_settings set_feedback=set_feedback />
+                            <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-5 items-start text-left">
+                                <SettingsNtfyCard settings=settings set_settings=set_settings on_test_ntfy=on_test_ntfy on_regen_topic=on_regen_topic />
                                 <SettingsLockdownCard settings=settings set_settings=set_settings api_url=api_url on_regen_secret=on_regen_secret on_reset_lockdown=on_reset_lockdown />
                             </div>
 

@@ -72,9 +72,8 @@ pub fn verify_token(token: &str, secret: &[u8]) -> Option<AuthClaims> {
 
     let mut mac = HmacSha256::new_from_slice(secret).ok()?;
     mac.update(payload_hex.as_bytes());
-    let expected_sig = hex::encode(mac.finalize().into_bytes());
-
-    if signature_hex != expected_sig {
+    let sig_bytes = hex::decode(signature_hex).ok()?;
+    if mac.verify_slice(&sig_bytes).is_err() {
         return None;
     }
 
@@ -123,12 +122,30 @@ pub fn get_auth_claims_from_context(state: &crate::backend::AppState) -> Option<
 }
 
 #[cfg(feature = "ssr")]
+fn is_secure_request() -> bool {
+    if let Some(parts) = leptos::prelude::use_context::<http::request::Parts>() {
+        if let Some(proto) = parts
+            .headers
+            .get("x-forwarded-proto")
+            .and_then(|v| v.to_str().ok())
+        {
+            if proto.eq_ignore_ascii_case("https") {
+                return true;
+            }
+        }
+    }
+    std::env::var("APP_ENV").as_deref() == Ok("production")
+        || std::env::var("SECURE_COOKIES").as_deref() == Ok("true")
+}
+
+#[cfg(feature = "ssr")]
 pub fn set_session_cookie(token: &str) {
     use http::header::{HeaderValue, SET_COOKIE};
     if let Some(res_opts) = leptos::prelude::use_context::<leptos_axum::ResponseOptions>() {
+        let sec_flag = if is_secure_request() { "; Secure" } else { "" };
         let cookie_val = format!(
-            "{}={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}",
-            SESSION_COOKIE_NAME, token, SESSION_DURATION_SECS
+            "{}={}; Path=/; HttpOnly; SameSite=Lax; Max-Age={}{}",
+            SESSION_COOKIE_NAME, token, SESSION_DURATION_SECS, sec_flag
         );
         if let Ok(hv) = HeaderValue::from_str(&cookie_val) {
             res_opts.append_header(SET_COOKIE, hv);
@@ -140,9 +157,10 @@ pub fn set_session_cookie(token: &str) {
 pub fn clear_session_cookie() {
     use http::header::{HeaderValue, SET_COOKIE};
     if let Some(res_opts) = leptos::prelude::use_context::<leptos_axum::ResponseOptions>() {
+        let sec_flag = if is_secure_request() { "; Secure" } else { "" };
         let cookie_val = format!(
-            "{}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0",
-            SESSION_COOKIE_NAME
+            "{}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0{}",
+            SESSION_COOKIE_NAME, sec_flag
         );
         if let Ok(hv) = HeaderValue::from_str(&cookie_val) {
             res_opts.append_header(SET_COOKIE, hv);

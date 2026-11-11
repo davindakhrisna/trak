@@ -1,19 +1,42 @@
 use crate::domain::{UserAccount, UserRole};
 use leptos::prelude::*;
 
-#[server]
-pub async fn fetch_users_list() -> Result<Vec<UserAccount>, ServerFnError> {
+#[cfg(feature = "ssr")]
+async fn verify_admin(
+    state: &crate::backend::AppState,
+) -> Result<crate::backend::auth::AuthClaims, ServerFnError> {
     use crate::backend::auth::get_auth_claims_from_context;
-    use crate::backend::AppState;
     use sqlx::Row;
 
-    let state = expect_context::<AppState>();
     let claims =
-        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
+        get_auth_claims_from_context(state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
     if !claims.is_admin() {
         return Err(ServerFnError::new("Forbidden: Admin privileges required."));
     }
+
+    let is_still_admin: bool = sqlx::query("SELECT role FROM users WHERE id = ?")
+        .bind(&claims.user_id)
+        .fetch_optional(&state.pool)
+        .await
+        .map_err(|e| ServerFnError::new(e.to_string()))?
+        .map(|r| r.get::<String, _>("role") == "ADMIN")
+        .unwrap_or(false);
+
+    if !is_still_admin {
+        return Err(ServerFnError::new("Forbidden: Admin privileges revoked."));
+    }
+
+    Ok(claims)
+}
+
+#[server]
+pub async fn fetch_users_list() -> Result<Vec<UserAccount>, ServerFnError> {
+    use crate::backend::AppState;
+    use sqlx::Row;
+
+    let state = expect_context::<AppState>();
+    let _ = verify_admin(&state).await?;
 
     let rows = sqlx::query(
         r#"
@@ -55,19 +78,14 @@ pub async fn admin_create_user(
     password: String,
     as_admin: bool,
 ) -> Result<UserAccount, ServerFnError> {
-    use crate::backend::auth::{get_auth_claims_from_context, hash_password};
+    use crate::backend::auth::hash_password;
     use crate::backend::AppState;
     use chrono::Utc;
     use sqlx::Row;
     use uuid::Uuid;
 
     let state = expect_context::<AppState>();
-    let claims =
-        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
-
-    if !claims.is_admin() {
-        return Err(ServerFnError::new("Forbidden: Admin privileges required."));
-    }
+    let _ = verify_admin(&state).await?;
 
     let clean_user = username.trim().to_string();
     if clean_user.len() < 3 || clean_user.len() > 32 {
@@ -119,6 +137,8 @@ pub async fn admin_create_user(
     .await
     .map_err(|e| ServerFnError::new(e.to_string()))?;
 
+    let _ = crate::backend::settings_db::ensure_user_settings(&state.pool, &new_id).await;
+
     Ok(UserAccount {
         id: new_id,
         username: clean_user,
@@ -130,17 +150,11 @@ pub async fn admin_create_user(
 
 #[server]
 pub async fn admin_toggle_user_role(target_id: String) -> Result<UserRole, ServerFnError> {
-    use crate::backend::auth::get_auth_claims_from_context;
     use crate::backend::AppState;
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims =
-        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
-
-    if !claims.is_admin() {
-        return Err(ServerFnError::new("Forbidden: Admin privileges required."));
-    }
+    let _ = verify_admin(&state).await?;
 
     let row = sqlx::query("SELECT role, is_first_admin FROM users WHERE id = ?")
         .bind(&target_id)
@@ -175,17 +189,11 @@ pub async fn admin_toggle_user_role(target_id: String) -> Result<UserRole, Serve
 
 #[server]
 pub async fn admin_delete_user(target_id: String) -> Result<(), ServerFnError> {
-    use crate::backend::auth::get_auth_claims_from_context;
     use crate::backend::AppState;
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
-    let claims =
-        get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
-
-    if !claims.is_admin() {
-        return Err(ServerFnError::new("Forbidden: Admin privileges required."));
-    }
+    let claims = verify_admin(&state).await?;
 
     if target_id == claims.user_id {
         return Err(ServerFnError::new("Cannot delete your own active account."));

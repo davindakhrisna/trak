@@ -149,12 +149,6 @@ pub struct UserSettings {
     pub locked_until: Option<String>,
     pub missed_deadlines_today: i64,
     pub timezone: String,
-    pub adguard_enabled: bool,
-    pub adguard_url: String,
-    pub adguard_username: String,
-    pub adguard_password: String,
-    pub adguard_client_id: String,
-    pub adguard_services: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

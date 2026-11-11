@@ -1,7 +1,5 @@
 #[cfg(feature = "ssr")]
-use crate::backend::lockdown_enforcer::{
-    apply_missed_lockdown, check_expired_lockdown, AdguardConfig,
-};
+use crate::backend::lockdown_enforcer::{apply_missed_lockdown, check_expired_lockdown};
 #[cfg(feature = "ssr")]
 use crate::backend::notification_task_checker::{check_user_tasks, NotifyFlags};
 #[cfg(feature = "ssr")]
@@ -27,9 +25,7 @@ async fn process_notifications(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
     let users = sqlx::query(
         "SELECT u.id, s.ntfy_enabled, s.ntfy_server, s.ntfy_topic, \
                 s.notify_start, s.notify_1h, s.notify_25m, s.notify_crossed, \
-                s.lockdown_enabled, s.timezone, s.adguard_enabled, s.adguard_url, \
-                s.adguard_username, s.adguard_password, s.adguard_client_id, \
-                s.adguard_services, s.locked_until \
+                s.lockdown_enabled, s.timezone, s.locked_until \
          FROM users u JOIN user_settings s ON u.id = s.user_id",
     )
     .fetch_all(pool)
@@ -49,35 +45,12 @@ async fn process_notifications(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
             u.get("notify_crossed"),
         );
         let (lockdown_on, tz_str): (i64, String) = (u.get("lockdown_enabled"), u.get("timezone"));
-        let (adguard_on, adguard_url, adguard_user, adguard_pass, client_id, services_raw): (
-            i64,
-            String,
-            String,
-            String,
-            String,
-            String,
-        ) = (
-            u.get("adguard_enabled"),
-            u.get("adguard_url"),
-            u.get("adguard_username"),
-            u.get("adguard_password"),
-            u.get("adguard_client_id"),
-            u.get("adguard_services"),
-        );
         let current_locked_until: Option<String> = u.get("locked_until");
 
         let tz = tz_str.parse::<chrono_tz::Tz>().unwrap_or(chrono_tz::UTC);
         let now_local = Utc::now().with_timezone(&tz);
 
-        let adguard = AdguardConfig {
-            enabled: adguard_on == 1,
-            url: &adguard_url,
-            username: &adguard_user,
-            password: &adguard_pass,
-            client_id: &client_id,
-        };
-
-        check_expired_lockdown(pool, &uid, current_locked_until.as_deref(), &adguard).await;
+        check_expired_lockdown(pool, &uid, current_locked_until.as_deref()).await;
 
         let flags = NotifyFlags {
             ntfy_on: ntfy_on == 1,
@@ -105,7 +78,7 @@ async fn process_notifications(pool: &Pool<Sqlite>) -> Result<(), sqlx::Error> {
                     .and_then(|dt| dt.and_local_timezone(tz).single())
                     .map(|t| t.to_rfc3339())
             };
-            apply_missed_lockdown(pool, &uid, lock_until, &adguard, &services_raw).await;
+            apply_missed_lockdown(pool, &uid, lock_until).await;
         }
     }
     Ok(())

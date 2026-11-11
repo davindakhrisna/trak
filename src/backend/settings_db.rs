@@ -12,9 +12,7 @@ pub async fn ensure_user_settings(
         r#"
         SELECT user_id, ntfy_enabled, ntfy_server, ntfy_topic,
                notify_start, notify_1h, notify_25m, notify_crossed,
-               lockdown_enabled, lockdown_secret, locked_until, timezone,
-               adguard_enabled, adguard_url, adguard_username, adguard_password,
-               adguard_client_id, adguard_services
+               lockdown_enabled, lockdown_secret, locked_until, timezone
         FROM user_settings WHERE user_id = ?
         "#,
     )
@@ -29,7 +27,6 @@ pub async fn ensure_user_settings(
         let n_25m: i64 = r.get("notify_25m");
         let n_cr: i64 = r.get("notify_crossed");
         let l_on: i64 = r.get("lockdown_enabled");
-        let ag_on: i64 = r.try_get("adguard_enabled").unwrap_or(0);
         return Ok(UserSettings {
             user_id: r.get("user_id"),
             ntfy_enabled: n_on == 1,
@@ -44,14 +41,6 @@ pub async fn ensure_user_settings(
             locked_until: r.get("locked_until"),
             missed_deadlines_today: 0,
             timezone: r.get("timezone"),
-            adguard_enabled: ag_on == 1,
-            adguard_url: r.try_get("adguard_url").unwrap_or_default(),
-            adguard_username: r.try_get("adguard_username").unwrap_or_default(),
-            adguard_password: r.try_get("adguard_password").unwrap_or_default(),
-            adguard_client_id: r.try_get("adguard_client_id").unwrap_or_default(),
-            adguard_services: r
-                .try_get("adguard_services")
-                .unwrap_or_else(|_| "instagram,tiktok,twitter,reddit,youtube".to_string()),
         });
     }
 
@@ -59,17 +48,14 @@ pub async fn ensure_user_settings(
     let topic = format!("trak-u-{}", &secret[..12]);
     let server = "https://ntfy.sh".to_string();
     let tz = "UTC".to_string();
-    let def_svc = "instagram,tiktok,twitter,reddit,youtube".to_string();
 
     sqlx::query(
         r#"
         INSERT INTO user_settings (
             user_id, ntfy_enabled, ntfy_server, ntfy_topic,
             notify_start, notify_1h, notify_25m, notify_crossed,
-            lockdown_enabled, lockdown_secret, timezone,
-            adguard_enabled, adguard_url, adguard_username, adguard_password,
-            adguard_client_id, adguard_services
-        ) VALUES (?, 1, ?, ?, 1, 1, 1, 1, 1, ?, ?, 0, '', '', '', '', ?)
+            lockdown_enabled, lockdown_secret, timezone
+        ) VALUES (?, 1, ?, ?, 1, 1, 1, 1, 1, ?, ?)
         "#,
     )
     .bind(uid)
@@ -77,7 +63,6 @@ pub async fn ensure_user_settings(
     .bind(&topic)
     .bind(&secret)
     .bind(&tz)
-    .bind(&def_svc)
     .execute(pool)
     .await?;
 
@@ -95,11 +80,5 @@ pub async fn ensure_user_settings(
         locked_until: None,
         missed_deadlines_today: 0,
         timezone: tz,
-        adguard_enabled: false,
-        adguard_url: String::new(),
-        adguard_username: String::new(),
-        adguard_password: String::new(),
-        adguard_client_id: String::new(),
-        adguard_services: def_svc,
     })
 }

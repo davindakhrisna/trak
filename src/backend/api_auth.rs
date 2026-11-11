@@ -119,6 +119,8 @@ pub async fn register_first_admin(
     .await
     .map_err(|e| ServerFnError::new(e.to_string()))?;
 
+    let _ = crate::backend::settings_db::ensure_user_settings(&state.pool, &user_id).await;
+
     let claims = AuthClaims::new(user_id.clone(), uname.clone(), UserRole::Admin);
     let token = sign_token(&claims, &state.secret).map_err(ServerFnError::new)?;
     set_session_cookie(&token);
@@ -135,11 +137,19 @@ pub async fn register_first_admin(
 #[server]
 pub async fn login(username: String, password: String) -> Result<UserAccount, ServerFnError> {
     use crate::backend::auth::{set_session_cookie, sign_token, verify_password, AuthClaims};
+    use crate::backend::security::{
+        check_login_rate_limit, clear_login_attempts, get_client_ip, record_failed_login,
+    };
     use crate::backend::AppState;
     use sqlx::Row;
 
     let state = expect_context::<AppState>();
     let uname = username.trim().to_string();
+    let client_ip = get_client_ip();
+
+    check_login_rate_limit(&client_ip, &uname)
+        .await
+        .map_err(ServerFnError::new)?;
 
     let user_row = sqlx::query(
         "SELECT id, username, password_hash, role, is_first_admin FROM users WHERE username = ?",
@@ -151,13 +161,19 @@ pub async fn login(username: String, password: String) -> Result<UserAccount, Se
 
     let row = match user_row {
         Some(r) => r,
-        None => return Err(ServerFnError::new("Invalid username or password.")),
+        None => {
+            record_failed_login(&client_ip, &uname).await;
+            return Err(ServerFnError::new("Invalid username or password."));
+        }
     };
 
     let pw_hash: String = row.get("password_hash");
     if !verify_password(&password, &pw_hash) {
+        record_failed_login(&client_ip, &uname).await;
         return Err(ServerFnError::new("Invalid username or password."));
     }
+
+    clear_login_attempts(&client_ip, &uname).await;
 
     let user_id: String = row.get("id");
     let role_str: String = row.get("role");

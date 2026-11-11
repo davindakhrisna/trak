@@ -7,10 +7,18 @@ pub async fn send_ntfy_notification(
     priority: u8,
     tags: &[&str],
 ) -> Result<(), String> {
-    let clean_server = server.trim().trim_end_matches('/');
+    use crate::backend::security::validate_outbound_url;
+
+    let clean_server = validate_outbound_url(server)?;
     let clean_topic = topic.trim();
-    if clean_topic.is_empty() {
-        return Err("Ntfy topic is empty.".to_string());
+    if clean_topic.is_empty() || clean_topic.len() > 64 {
+        return Err("Ntfy topic must be between 1 and 64 characters.".to_string());
+    }
+    if !clean_topic
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err("Ntfy topic contains invalid characters.".to_string());
     }
 
     let url = format!("{}/{}", clean_server, clean_topic);

@@ -83,7 +83,7 @@ pub async fn create_template(
     let claims =
         get_auth_claims_from_context(&state).ok_or_else(|| ServerFnError::new("Unauthorized"))?;
 
-    let mut clean_title = title.trim().to_string();
+    let mut clean_title = title.replace(['\r', '\n'], " ").trim().to_string();
     if clean_title.is_empty() {
         return Err(ServerFnError::new(
             "Template task description cannot be empty.",
@@ -93,25 +93,23 @@ pub async fn create_template(
         clean_title.truncate(200);
     }
 
-    let clean_start = start
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .map(|mut s| {
-            if s.len() > 30 {
-                s.truncate(30);
-            }
-            s
-        });
+    let clean_start = match start.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        Some(s) => {
+            chrono::NaiveTime::parse_from_str(s, "%H:%M")
+                .map_err(|_| ServerFnError::new("Start time must be HH:MM format (e.g. 09:00)."))?;
+            Some(s.to_string())
+        }
+        None => None,
+    };
 
-    let clean_deadline = deadline
-        .map(|d| d.trim().to_string())
-        .filter(|d| !d.is_empty())
-        .map(|mut d| {
-            if d.len() > 30 {
-                d.truncate(30);
-            }
-            d
-        });
+    let clean_deadline = match deadline.as_deref().map(str::trim).filter(|d| !d.is_empty()) {
+        Some(d) => {
+            chrono::NaiveTime::parse_from_str(d, "%H:%M")
+                .map_err(|_| ServerFnError::new("Deadline must be HH:MM format (e.g. 17:30)."))?;
+            Some(d.to_string())
+        }
+        None => None,
+    };
 
     let tpl_id = Uuid::new_v4().to_string();
     let day_int = weekday_to_int(day);
