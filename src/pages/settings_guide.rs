@@ -8,7 +8,12 @@ pub enum GuidePlatform {
 }
 
 #[component]
-pub fn SettingsGuideTabs(api_url: Signal<String>, topic_url: Signal<String>) -> impl IntoView {
+pub fn SettingsGuideTabs(
+    api_url: Signal<String>,
+    topic_url: Signal<String>,
+    ntfy_enabled: Signal<bool>,
+    lockdown_enabled: Signal<bool>,
+) -> impl IntoView {
     let (platform, set_platform) = signal(GuidePlatform::Ios);
 
     let tab_class = move |target: GuidePlatform| {
@@ -26,21 +31,36 @@ pub fn SettingsGuideTabs(api_url: Signal<String>, topic_url: Signal<String>) -> 
                     "Setup & Automation Guides"
                 </span>
                 <div class="flex items-center gap-1 flex-wrap">
-                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Ios) class=move || tab_class(GuidePlatform::Ios)>"iOS (Shortcuts)"</button>
-                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Android) class=move || tab_class(GuidePlatform::Android)>"Android (MacroDroid)"</button>
-                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Ntfy) class=move || tab_class(GuidePlatform::Ntfy)>"Ntfy Pairing"</button>
+                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Ios) class=move || tab_class(GuidePlatform::Ios)>
+                        {move || if lockdown_enabled.get() { "iOS (Shortcuts)" } else { "iOS (Shortcuts) [Off]" }}
+                    </button>
+                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Android) class=move || tab_class(GuidePlatform::Android)>
+                        {move || if lockdown_enabled.get() { "Android (MacroDroid)" } else { "Android (MacroDroid) [Off]" }}
+                    </button>
+                    <button type="button" on:click=move |_| set_platform.set(GuidePlatform::Ntfy) class=move || tab_class(GuidePlatform::Ntfy)>
+                        {move || if ntfy_enabled.get() { "Ntfy Pairing" } else { "Ntfy Pairing [Off]" }}
+                    </button>
                 </div>
             </div>
 
             {move || match platform.get() {
                 GuidePlatform::Ios => view! {
-                    <div class="flex flex-col gap-2 font-sans text-xs text-black dark:text-white leading-relaxed">
+                    <div class="flex flex-col gap-2.5 font-sans text-xs text-black dark:text-white leading-relaxed">
+                        {move || (!lockdown_enabled.get()).then(|| view! {
+                            <div class="border border-gray p-2.5 bg-gray/10 text-gray font-mono text-[11px] flex items-center gap-2">
+                                <span>"⚠️ Mobile App Lockdown is currently disabled in settings above. Enable it to enforce distraction blocking."</span>
+                            </div>
+                        })}
                         <p class="font-mono text-[11px] text-gray uppercase">"Enforce lockdown via native iOS Shortcuts automation:"</p>
                         <ol class="list-decimal pl-5 flex flex-col gap-1 text-black dark:text-white">
                             <li>"Open iOS " <strong class="font-mono">"Shortcuts"</strong> " app -> tap " <strong class="font-mono">"Automation"</strong> " tab -> " <strong class="font-mono">"New Automation"</strong> "."</li>
                             <li>"Select " <strong class="font-mono">"App"</strong> " -> Choose distraction apps (Instagram, TikTok, X) -> check " <strong class="font-mono">"Is Opened"</strong> " & " <strong class="font-mono">"Run Immediately"</strong> "."</li>
                             <li>"Add Action: " <strong class="font-mono">"Get Contents of URL"</strong> " -> Paste your private API URL:"
-                                <div class="my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all">{move || api_url.get()}</div>
+                                <div class=move || if lockdown_enabled.get() {
+                                    "my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all"
+                                } else {
+                                    "my-1.5 p-2 bg-gray/10 border border-gray/40 font-mono text-[11px] text-gray/50 break-all select-none cursor-not-allowed"
+                                }>{move || api_url.get()}</div>
                             </li>
                             <li>"Add Action: " <strong class="font-mono">"Get Value for Key"</strong> " -> key: " <code class="font-mono bg-gray/20 px-1">"locked"</code> "."</li>
                             <li>"Add Action: " <strong class="font-mono">"If"</strong> " value is true -> Add " <strong class="font-mono">"Go to Home Screen"</strong> " action."</li>
@@ -48,13 +68,22 @@ pub fn SettingsGuideTabs(api_url: Signal<String>, topic_url: Signal<String>) -> 
                     </div>
                 }.into_any(),
                 GuidePlatform::Android => view! {
-                    <div class="flex flex-col gap-2 font-sans text-xs text-black dark:text-white leading-relaxed">
+                    <div class="flex flex-col gap-2.5 font-sans text-xs text-black dark:text-white leading-relaxed">
+                        {move || (!lockdown_enabled.get()).then(|| view! {
+                            <div class="border border-gray p-2.5 bg-gray/10 text-gray font-mono text-[11px] flex items-center gap-2">
+                                <span>"⚠️ Mobile App Lockdown is currently disabled in settings above. Enable it to enforce distraction blocking."</span>
+                            </div>
+                        })}
                         <p class="font-mono text-[11px] text-gray uppercase">"Enforce lockdown on Android using MacroDroid (100% Free - 1 Macro Needed):"</p>
                         <ol class="list-decimal pl-5 flex flex-col gap-1 text-black dark:text-white">
                             <li>"Install " <strong class="font-mono">"MacroDroid"</strong> " from Google Play (free tier allows 5 macros; Trak needs only 1)."</li>
                             <li>"Tap " <strong class="font-mono">"Add Macro"</strong> " -> Trigger: " <strong class="font-mono">"Application Launched"</strong> " -> Select distraction apps."</li>
                             <li>"Action: " <strong class="font-mono">"HTTP Request (GET)"</strong> " -> Set target URL to:"
-                                <div class="my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all">{move || api_url.get()}</div>
+                                <div class=move || if lockdown_enabled.get() {
+                                    "my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all"
+                                } else {
+                                    "my-1.5 p-2 bg-gray/10 border border-gray/40 font-mono text-[11px] text-gray/50 break-all select-none cursor-not-allowed"
+                                }>{move || api_url.get()}</div>
                             </li>
                             <li>"Action: " <strong class="font-mono">"If HTTP Response"</strong> " contains " <code class="font-mono bg-gray/20 px-1">"\"locked\":true"</code> ":"</li>
                             <li>"Action: " <strong class="font-mono">"Press Home Button"</strong> " (or Kill Process) + Toast: " <code class="font-mono bg-gray/20 px-1">"TRAK LOCKDOWN ACTIVE"</code> "."</li>
@@ -62,13 +91,22 @@ pub fn SettingsGuideTabs(api_url: Signal<String>, topic_url: Signal<String>) -> 
                     </div>
                 }.into_any(),
                 GuidePlatform::Ntfy => view! {
-                    <div class="flex flex-col gap-2 font-sans text-xs text-black dark:text-white leading-relaxed">
+                    <div class="flex flex-col gap-2.5 font-sans text-xs text-black dark:text-white leading-relaxed">
+                        {move || (!ntfy_enabled.get()).then(|| view! {
+                            <div class="border border-gray p-2.5 bg-gray/10 text-gray font-mono text-[11px] flex items-center gap-2">
+                                <span>"⚠️ Ntfy Alerts are currently disabled in settings above. Enable Ntfy Alerts to receive push notifications."</span>
+                            </div>
+                        })}
                         <p class="font-mono text-[11px] text-gray uppercase">"Subscribe to your personal Trak push channel:"</p>
                         <ol class="list-decimal pl-5 flex flex-col gap-1 text-black dark:text-white">
                             <li>"Install " <strong class="font-mono">"ntfy"</strong> " from App Store (iOS) or Google Play / F-Droid (Android)."</li>
                             <li>"Tap " <strong class="font-mono">"+ (Subscribe to topic)"</strong> "."</li>
                             <li>"Enter your personal subscription URL or scan in browser:"
-                                <div class="my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all">{move || topic_url.get()}</div>
+                                <div class=move || if ntfy_enabled.get() {
+                                    "my-1.5 p-2 bg-white dark:bg-black border border-black dark:border-white font-mono text-[11px] break-all select-all"
+                                } else {
+                                    "my-1.5 p-2 bg-gray/10 border border-gray/40 font-mono text-[11px] text-gray/50 break-all select-none cursor-not-allowed"
+                                }>{move || topic_url.get()}</div>
                             </li>
                             <li>"Grant notification permissions. On Android, exempt ntfy from battery optimization."</li>
                             <li>"Click " <strong class="font-mono">"Send Test"</strong> " in settings above to confirm delivery."</li>

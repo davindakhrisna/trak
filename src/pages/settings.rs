@@ -12,6 +12,8 @@ pub fn SettingsPage() -> impl IntoView {
     let (settings, set_settings) = signal(Option::<UserSettings>::None);
     let (feedback, set_feedback) = signal(Option::<String>::None);
     let (origin, _set_origin) = signal("http://127.0.0.1:3000".to_string());
+    let ntfy_enabled = Signal::derive(move || settings.get().map(|s| s.ntfy_enabled).unwrap_or(false));
+    let lockdown_enabled = Signal::derive(move || settings.get().map(|s| s.lockdown_enabled).unwrap_or(false));
 
     Effect::new(move |_| {
         leptos::task::spawn_local(async move {
@@ -146,7 +148,12 @@ pub fn SettingsPage() -> impl IntoView {
                                 </div>
                             })}
 
-                            <SettingsGuideTabs api_url=api_url topic_url=topic_url />
+                            <SettingsGuideTabs
+                                api_url=api_url
+                                topic_url=topic_url
+                                ntfy_enabled=ntfy_enabled
+                                lockdown_enabled=lockdown_enabled
+                            />
                         </section>
                     }.into_any()
                 } else {
