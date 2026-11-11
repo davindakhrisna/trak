@@ -31,13 +31,14 @@ pub fn SettingsNtfyCard(
                 <label class="font-mono text-[11px] text-gray uppercase">"Server URL"</label>
                 <input
                     type="text"
+                    readonly
+                    prop:readonly=true
                     prop:disabled=move || !is_enabled()
                     prop:value=move || cfg().ntfy_server
-                    on:input=move |ev| set_settings.update(|s| if let Some(c) = s { c.ntfy_server = event_target_value(&ev); })
                     class=move || if is_enabled() {
-                        "input-monolith text-xs font-mono"
+                        "input-monolith text-xs font-mono select-all cursor-default bg-gray/5"
                     } else {
-                        "input-monolith text-xs font-mono opacity-40 cursor-not-allowed bg-gray/10"
+                        "input-monolith text-xs font-mono opacity-40 cursor-not-allowed bg-gray/10 select-none"
                     }
                 />
             </div>
@@ -60,13 +61,14 @@ pub fn SettingsNtfyCard(
                 </div>
                 <input
                     type="text"
+                    readonly
+                    prop:readonly=true
                     prop:disabled=move || !is_enabled()
                     prop:value=move || cfg().ntfy_topic
-                    on:input=move |ev| set_settings.update(|s| if let Some(c) = s { c.ntfy_topic = event_target_value(&ev); })
                     class=move || if is_enabled() {
-                        "input-monolith text-xs font-mono"
+                        "input-monolith text-xs font-mono select-all cursor-default bg-gray/5"
                     } else {
-                        "input-monolith text-xs font-mono opacity-40 cursor-not-allowed bg-gray/10"
+                        "input-monolith text-xs font-mono opacity-40 cursor-not-allowed bg-gray/10 select-none"
                     }
                 />
             </div>
