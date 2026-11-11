@@ -1,4 +1,58 @@
 #[cfg(feature = "ssr")]
+pub fn burst_config(priority: u8) -> (usize, u64) {
+    match priority {
+        0..=2 => (3, 2000), // Lowest: 3 notifications, 2s cooldown
+        3 => (7, 1650),     // Medium: 7 notifications, 1.65s cooldown
+        4 => (11, 1350),    // High: 11 notifications, 1.35s cooldown
+        _ => (15, 1000),    // Highest: 15 notifications, 1.0s cooldown
+    }
+}
+
+#[cfg(feature = "ssr")]
+pub fn calculate_step_priority(step: usize, total: usize, max_prio: u8) -> u8 {
+    if total <= 1 || max_prio <= 2 {
+        return max_prio;
+    }
+    let min_prio = 2u8;
+    let progress = step as f32 / (total - 1) as f32;
+    let prio_float = min_prio as f32 + (max_prio - min_prio) as f32 * progress;
+    (prio_float.round() as u8).clamp(1, max_prio)
+}
+
+#[cfg(feature = "ssr")]
+async fn send_single_post(
+    client: &reqwest::Client,
+    url: &str,
+    title: &str,
+    message: &str,
+    priority: u8,
+    tags_str: &str,
+) -> Result<(), String> {
+    let mut req = client
+        .post(url)
+        .header("Title", title)
+        .header("Priority", priority.to_string())
+        .body(message.to_string());
+
+    if !tags_str.is_empty() {
+        req = req.header("Tags", tags_str);
+    }
+
+    let res = req
+        .send()
+        .await
+        .map_err(|e| format!("Failed to reach Ntfy server: {}", e))?;
+    if !res.status().is_success() {
+        return Err(format!(
+            "Ntfy rejected message with status {}",
+            res.status()
+        ));
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "ssr")]
 pub async fn send_ntfy_notification(
     server: &str,
     topic: &str,
@@ -28,25 +82,47 @@ pub async fn send_ntfy_notification(
         .map_err(|e| e.to_string())?;
 
     let tags_str = tags.join(",");
-    let mut req = client
-        .post(&url)
-        .header("Title", title)
-        .header("Priority", priority.to_string())
-        .body(message.to_string());
+    let (total_count, cooldown_ms) = burst_config(priority);
 
-    if !tags_str.is_empty() {
-        req = req.header("Tags", tags_str);
-    }
+    let initial_prio = calculate_step_priority(0, total_count, priority);
+    let initial_title = format!("{} [1/{}]", title, total_count);
+    send_single_post(
+        &client,
+        &url,
+        &initial_title,
+        message,
+        initial_prio,
+        &tags_str,
+    )
+    .await?;
 
-    let res = req
-        .send()
-        .await
-        .map_err(|e| format!("Failed to reach Ntfy server: {}", e))?;
-    if !res.status().is_success() {
-        return Err(format!(
-            "Ntfy rejected message with status {}",
-            res.status()
-        ));
+    if total_count > 1 {
+        let client_bg = client.clone();
+        let url_bg = url;
+        let title_bg = title.to_string();
+        let message_bg = message.to_string();
+        let tags_bg = tags_str;
+
+        tokio::spawn(async move {
+            for i in 1..total_count {
+                tokio::time::sleep(std::time::Duration::from_millis(cooldown_ms)).await;
+                let step_prio = calculate_step_priority(i, total_count, priority);
+                let step_title = format!("{} [{}/{}]", title_bg, i + 1, total_count);
+                if send_single_post(
+                    &client_bg,
+                    &url_bg,
+                    &step_title,
+                    &message_bg,
+                    step_prio,
+                    &tags_bg,
+                )
+                .await
+                .is_err()
+                {
+                    break;
+                }
+            }
+        });
     }
 
     Ok(())

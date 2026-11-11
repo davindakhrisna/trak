@@ -5,7 +5,7 @@ mod tests {
     use axum::Router;
     use std::sync::{Arc, Mutex};
     use tokio::net::TcpListener;
-    use trak::backend::ntfy::send_ntfy_notification;
+    use trak::backend::ntfy::{burst_config, calculate_step_priority, send_ntfy_notification};
     use trak::backend::security::validate_outbound_url;
 
     #[tokio::test]
@@ -103,5 +103,43 @@ mod tests {
         assert_eq!(rec[0].1, "4");
         assert_eq!(rec[0].2, "warning,clock");
         assert_eq!(rec[0].3, "Task starts in 25 minutes.");
+    }
+
+    #[test]
+    fn test_ntfy_burst_config_and_priority_climbing() {
+        // Lowest (Priority <= 2): 3 notifications, 2000ms cooldown (2 seconds)
+        assert_eq!(burst_config(1), (3, 2000));
+        assert_eq!(burst_config(2), (3, 2000));
+
+        // Intermediate climbing levels
+        assert_eq!(burst_config(3), (7, 1650));
+        assert_eq!(burst_config(4), (11, 1350));
+
+        // Highest (Priority 5): 15 notifications, 1000ms cooldown (1 second)
+        assert_eq!(burst_config(5), (15, 1000));
+
+        // Priority climbing for Highest (15 steps)
+        let prios: Vec<u8> = (0..15)
+            .map(|step| calculate_step_priority(step, 15, 5))
+            .collect();
+        assert_eq!(prios[0], 2, "Starts at low priority (2)");
+        assert_eq!(prios[14], 5, "Reaches urgent priority (5)");
+        assert!(
+            prios.windows(2).all(|w| w[0] <= w[1]),
+            "Priorities monotonically climb"
+        );
+
+        // Priority climbing for Medium (7 steps)
+        let prios_med: Vec<u8> = (0..7)
+            .map(|step| calculate_step_priority(step, 7, 3))
+            .collect();
+        assert_eq!(prios_med[0], 2);
+        assert_eq!(prios_med[6], 3);
+
+        // Priority climbing for Lowest (3 steps)
+        let prios_low: Vec<u8> = (0..3)
+            .map(|step| calculate_step_priority(step, 3, 2))
+            .collect();
+        assert_eq!(prios_low, vec![2, 2, 2]);
     }
 }
