@@ -7,12 +7,11 @@ use leptos::prelude::*;
 #[derive(Clone, Copy)]
 pub struct AppStore {
     pub users: RwSignal<Vec<UserAccount>>,
-    pub current_user_id: RwSignal<Option<u64>>,
+    pub current_user_id: RwSignal<Option<String>>,
     pub first_register_claimed: RwSignal<bool>,
     pub today_tasks: RwSignal<Vec<TodayTask>>,
     pub templates: RwSignal<Vec<RecurringTemplate>>,
     pub selected_day: RwSignal<Weekday>,
-    pub next_id: RwSignal<u64>,
     pub theme_mode: RwSignal<ThemeMode>,
 }
 
@@ -21,12 +20,11 @@ pub fn provide_app_store() -> AppStore {
     let today_init = seed::default_today_tasks(&templates_init);
     let store = AppStore {
         users: RwSignal::new(seed::default_users()),
-        current_user_id: RwSignal::new(Some(1)),
+        current_user_id: RwSignal::new(Some("1".to_string())),
         first_register_claimed: RwSignal::new(false),
         today_tasks: RwSignal::new(today_init),
         templates: RwSignal::new(templates_init),
         selected_day: RwSignal::new(Weekday::today()),
-        next_id: RwSignal::new(500),
         theme_mode: RwSignal::new(ThemeMode::System),
     };
     provide_context(store);
@@ -37,11 +35,20 @@ pub fn use_app_store() -> AppStore {
     expect_context::<AppStore>()
 }
 
+fn clean_time_opt(val: Option<String>) -> Option<String> {
+    val.map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .map(|mut s| {
+            if s.len() > 30 {
+                s.truncate(30);
+            }
+            s
+        })
+}
+
 impl AppStore {
-    fn alloc_id(&self) -> u64 {
-        let id = self.next_id.get_untracked();
-        self.next_id.set(id + 1);
-        id
+    fn alloc_id(&self) -> String {
+        uuid::Uuid::new_v4().to_string()
     }
 
     pub fn current_user(&self) -> Option<UserAccount> {
@@ -55,7 +62,7 @@ impl AppStore {
             .unwrap_or(false)
     }
 
-    pub fn add_today_task(&self, title: String) {
+    pub fn add_today_task(&self, title: String, start: Option<String>, deadline: Option<String>) {
         let mut trimmed = title.trim().to_string();
         if trimmed.is_empty() {
             return;
@@ -63,6 +70,8 @@ impl AppStore {
         if trimmed.len() > 200 {
             trimmed.truncate(200);
         }
+        let clean_start = clean_time_opt(start);
+        let clean_deadline = clean_time_opt(deadline);
         let id = self.alloc_id();
         self.today_tasks.update(|list| {
             list.insert(
@@ -70,6 +79,8 @@ impl AppStore {
                 TodayTask {
                     id,
                     title: trimmed,
+                    start: clean_start,
+                    deadline: clean_deadline,
                     completed: false,
                     from_template: false,
                 },
@@ -77,7 +88,7 @@ impl AppStore {
         });
     }
 
-    pub fn toggle_today_task(&self, id: u64) {
+    pub fn toggle_today_task(&self, id: &str) {
         self.today_tasks.update(|list| {
             if let Some(item) = list.iter_mut().find(|t| t.id == id) {
                 item.completed = !item.completed;
@@ -85,11 +96,17 @@ impl AppStore {
         });
     }
 
-    pub fn remove_today_task(&self, id: u64) {
+    pub fn remove_today_task(&self, id: &str) {
         self.today_tasks.update(|list| list.retain(|t| t.id != id));
     }
 
-    pub fn add_template(&self, day: Weekday, title: String) {
+    pub fn add_template(
+        &self,
+        day: Weekday,
+        title: String,
+        start: Option<String>,
+        deadline: Option<String>,
+    ) {
         let mut trimmed = title.trim().to_string();
         if trimmed.is_empty() {
             return;
@@ -97,12 +114,18 @@ impl AppStore {
         if trimmed.len() > 200 {
             trimmed.truncate(200);
         }
+        let clean_start = clean_time_opt(start);
+        let clean_deadline = clean_time_opt(deadline);
         let id = self.alloc_id();
+        let cloned_start = clean_start.clone();
+        let cloned_dl = clean_deadline.clone();
         self.templates.update(|list| {
             list.push(RecurringTemplate {
                 id,
                 day,
                 title: trimmed.clone(),
+                start: cloned_start,
+                deadline: cloned_dl,
             });
         });
         if day == Weekday::today() {
@@ -113,6 +136,8 @@ impl AppStore {
                     TodayTask {
                         id: task_id,
                         title: trimmed,
+                        start: clean_start,
+                        deadline: clean_deadline,
                         completed: false,
                         from_template: true,
                     },
@@ -121,7 +146,7 @@ impl AppStore {
         }
     }
 
-    pub fn remove_template(&self, id: u64) {
+    pub fn remove_template(&self, id: &str) {
         self.templates.update(|list| list.retain(|t| t.id != id));
     }
 }

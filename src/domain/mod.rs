@@ -81,7 +81,7 @@ impl UserRole {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserAccount {
-    pub id: u64,
+    pub id: String,
     pub username: String,
     pub password: String,
     pub role: UserRole,
@@ -90,17 +90,21 @@ pub struct UserAccount {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TodayTask {
-    pub id: u64,
+    pub id: String,
     pub title: String,
+    pub start: Option<String>,
+    pub deadline: Option<String>,
     pub completed: bool,
     pub from_template: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RecurringTemplate {
-    pub id: u64,
+    pub id: String,
     pub day: Weekday,
     pub title: String,
+    pub start: Option<String>,
+    pub deadline: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]

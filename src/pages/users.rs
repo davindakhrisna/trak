@@ -82,7 +82,7 @@ pub fn UsersPage() -> impl IntoView {
 
                                     <div
                                         on:click=move |_| set_as_admin.update(|v| *v = !*v)
-                                        class="w-full border border-gray px-4 py-2.5 flex items-center justify-center gap-3 cursor-pointer select-none"
+                                        class="w-full px-4 py-2.5 flex items-center justify-start gap-3 cursor-pointer select-none"
                                     >
                                         <SquareCheck
                                             checked=as_admin.get()
@@ -114,21 +114,22 @@ pub fn UsersPage() -> impl IntoView {
                                 <div class="w-full flex flex-col gap-2">
                                     <div class="flex items-center justify-between px-1 pb-1 border-b border-black dark:border-white">
                                         <span class="font-mono text-xs text-black dark:text-white uppercase tracking-wider">
-                                            "Directory"
+                                            "Users"
                                         </span>
                                         <span class="font-mono text-xs text-gray">
                                             {move || format!("{} accounts", store.users.get().len())}
                                         </span>
                                     </div>
 
-                                    <ul class="w-full flex flex-col gap-2 max-h-[340px] overflow-y-auto scroll-monolith pr-2">
+                                    <ul class="w-full flex flex-col gap-2 max-h-[340px] overflow-y-auto scroll-monolith">
                                 {move || {
                                     store
                                         .users
                                         .get()
                                         .into_iter()
                                         .map(|u| {
-                                            let uid = u.id;
+                                            let uid_toggle = u.id.clone();
+                                            let uid_remove = u.id.clone();
                                             let is_root = u.is_first_admin;
                                             let role = u.role;
                                             let display_name = u.username.clone();
@@ -156,7 +157,7 @@ pub fn UsersPage() -> impl IntoView {
                                                             <div class="flex items-center gap-1.5 shrink-0">
                                                                 <button
                                                                     type="button"
-                                                                    on:click=move |_| store.admin_toggle_role(uid)
+                                                                    on:click=move |_| store.admin_toggle_role(&uid_toggle)
                                                                     class="btn-monolith-ghost shrink-0"
                                                                 >
                                                                     {if role.is_admin() {
@@ -168,7 +169,7 @@ pub fn UsersPage() -> impl IntoView {
                                                                 <button
                                                                     type="button"
                                                                     aria-label="Remove user"
-                                                                    on:click=move |_| store.admin_remove_user(uid)
+                                                                    on:click=move |_| store.admin_remove_user(&uid_remove)
                                                                     class="w-7 h-7 border border-gray text-gray hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white font-mono text-xs flex items-center justify-center cursor-pointer shrink-0"
                                                                 >
                                                                     "×"

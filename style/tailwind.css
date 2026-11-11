@@ -8,6 +8,15 @@
   *::after {
     border-radius: 0px !important;
     box-shadow: none !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  *::-webkit-scrollbar,
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
   }
 
   html,
@@ -51,42 +60,11 @@
   }
 
   .scroll-monolith {
-    scrollbar-width: thin;
-    scrollbar-color: #000000 #FFFFFF;
-  }
-
-  html.dark .scroll-monolith {
-    scrollbar-color: #FFFFFF #000000;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
   }
 
   .scroll-monolith::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .scroll-monolith::-webkit-scrollbar-track {
-    background: #FFFFFF;
-    border-left: 1px solid #000000;
-  }
-
-  html.dark .scroll-monolith::-webkit-scrollbar-track {
-    background: #000000;
-    border-left: 1px solid #FFFFFF;
-  }
-
-  .scroll-monolith::-webkit-scrollbar-thumb {
-    background: #000000;
-  }
-
-  html.dark .scroll-monolith::-webkit-scrollbar-thumb {
-    background: #FFFFFF;
-  }
-
-  .scroll-monolith::-webkit-scrollbar-thumb:hover {
-    background: #737373;
-  }
-
-  .scroll-monolith::-webkit-scrollbar-button {
     display: none !important;
     width: 0px !important;
     height: 0px !important;

@@ -3,11 +3,7 @@ use crate::state::AppStore;
 use leptos::prelude::*;
 
 impl AppStore {
-    pub fn register_first_admin(
-        &self,
-        username: String,
-        password: String,
-    ) -> Result<(), String> {
+    pub fn register_first_admin(&self, username: String, password: String) -> Result<(), String> {
         if self.first_register_claimed.get_untracked() {
             return Err("Initial admin already registered. Sign in at /login.".to_string());
         }
@@ -24,10 +20,9 @@ impl AppStore {
         if password.len() > 128 {
             return Err("Password cannot exceed 128 characters.".to_string());
         }
-        let id = self.next_id.get_untracked();
-        self.next_id.set(id + 1);
+        let id = uuid::Uuid::new_v4().to_string();
         let account = UserAccount {
-            id,
+            id: id.clone(),
             username: clean_user,
             password,
             role: UserRole::Admin,
@@ -108,8 +103,7 @@ impl AppStore {
         if exists {
             return Err("A user with that username already exists.".to_string());
         }
-        let id = self.next_id.get_untracked();
-        self.next_id.set(id + 1);
+        let id = uuid::Uuid::new_v4().to_string();
         self.users.update(|list| {
             list.push(UserAccount {
                 id,
@@ -126,7 +120,7 @@ impl AppStore {
         Ok(())
     }
 
-    pub fn admin_toggle_role(&self, target_id: u64) {
+    pub fn admin_toggle_role(&self, target_id: &str) {
         if !self.is_admin() {
             return;
         }
@@ -142,7 +136,7 @@ impl AppStore {
         });
     }
 
-    pub fn admin_remove_user(&self, target_id: u64) {
+    pub fn admin_remove_user(&self, target_id: &str) {
         if !self.is_admin() {
             return;
         }

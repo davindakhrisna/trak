@@ -8,6 +8,8 @@ use leptos::prelude::*;
 pub fn TemplatesPage() -> impl IntoView {
     let store = use_app_store();
     let (draft, set_draft) = signal(String::new());
+    let (start_time, set_start_time) = signal(String::new());
+    let (deadline, set_deadline) = signal(String::new());
 
     let day_templates = Signal::derive(move || {
         let day = store.selected_day.get();
@@ -23,13 +25,19 @@ pub fn TemplatesPage() -> impl IntoView {
         ev.prevent_default();
         let text = draft.get();
         if !text.trim().is_empty() {
-            store.add_template(store.selected_day.get(), text);
+            let st = start_time.get();
+            let st_opt = if st.trim().is_empty() { None } else { Some(st) };
+            let dl = deadline.get();
+            let dl_opt = if dl.trim().is_empty() { None } else { Some(dl) };
+            store.add_template(store.selected_day.get(), text, st_opt, dl_opt);
             set_draft.set(String::new());
+            set_start_time.set(String::new());
+            set_deadline.set(String::new());
         }
     };
 
     view! {
-        <MonolithShell active_path="/templates">
+        <MonolithShell active_path="/templates" wide=true>
             <section class="w-full flex flex-col items-center justify-center gap-6">
                 <div class="w-full flex flex-col items-center justify-center gap-1">
                     <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">
@@ -93,20 +101,33 @@ pub fn TemplatesPage() -> impl IntoView {
                     <div class="w-full flex items-stretch border border-black dark:border-white bg-white dark:bg-black">
                         <input
                             type="text"
-                            placeholder=move || {
-                                format!(
-                                    "Add task recurring every {}...",
-                                    store.selected_day.get().name()
-                                )
-                            }
+                            placeholder="New recurring task..."
                             maxlength="200"
                             prop:value=move || draft.get()
                             on:input=move |ev| set_draft.set(event_target_value(&ev))
-                            class="flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-4 py-3 text-left text-sm focus:outline-none"
+                            class="flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 sm:px-4 py-3 text-left text-sm focus:outline-none"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Start"
+                            title="Start time (e.g. 09:00)"
+                            maxlength="20"
+                            prop:value=move || start_time.get()
+                            on:input=move |ev| set_start_time.set(event_target_value(&ev))
+                            class="w-20 sm:w-28 border-l border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-2 sm:px-3 py-3 text-left text-xs font-mono focus:outline-none shrink-0"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Due"
+                            title="Deadline (e.g. 10:00)"
+                            maxlength="20"
+                            prop:value=move || deadline.get()
+                            on:input=move |ev| set_deadline.set(event_target_value(&ev))
+                            class="w-20 sm:w-28 border-l border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-2 sm:px-3 py-3 text-left text-xs font-mono focus:outline-none shrink-0"
                         />
                         <button
                             type="submit"
-                            class="px-5 py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs border-l border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0"
+                            class="px-3 sm:px-5 py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs border-l border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0"
                         >
                             "Save"
                         </button>
@@ -128,13 +149,19 @@ pub fn TemplatesPage() -> impl IntoView {
                                 .into_any()
                         } else {
                             view! {
-                                <ul class="w-full flex flex-col gap-2 max-h-[340px] overflow-y-auto scroll-monolith pr-2">
+                                <ul class="w-full flex flex-col gap-2 max-h-[340px] overflow-y-auto scroll-monolith">
                                     {list
                                         .into_iter()
                                         .map(|tpl| {
                                             let tpl_id = tpl.id;
                                             let title_text = tpl.title.clone();
                                             let day_code = tpl.day.code();
+                                            let time_badge = match (&tpl.start, &tpl.deadline) {
+                                                (Some(s), Some(d)) => Some(format!("{} - {}", s, d)),
+                                                (Some(s), None) => Some(s.clone()),
+                                                (None, Some(d)) => Some(d.clone()),
+                                                (None, None) => None,
+                                            };
                                             let del_label = format!("Delete {}", tpl.title);
 
                                             view! {
@@ -145,10 +172,17 @@ pub fn TemplatesPage() -> impl IntoView {
                                                     <span class="flex-1 min-w-0 px-1 text-left text-sm text-black dark:text-white font-medium break-words">
                                                         {title_text}
                                                     </span>
+                                                    {time_badge.map(|tb| {
+                                                        view! {
+                                                            <span class="font-mono text-[10px] text-gray border border-gray px-1.5 py-0.5 shrink-0 whitespace-nowrap">
+                                                                {tb}
+                                                            </span>
+                                                        }
+                                                    })}
                                                     <button
                                                         type="button"
                                                         aria-label=del_label
-                                                        on:click=move |_| store.remove_template(tpl_id)
+                                                        on:click=move |_| store.remove_template(&tpl_id)
                                                         class="shrink-0 w-6 h-6 flex items-center justify-center font-mono text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
                                                     >
                                                         "×"

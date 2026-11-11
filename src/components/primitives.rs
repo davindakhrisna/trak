@@ -42,11 +42,7 @@ pub fn MonolithShell(
 }
 
 #[component]
-pub fn SquareCheck(
-    checked: bool,
-    on_toggle: Callback<()>,
-    aria_label: String,
-) -> impl IntoView {
+pub fn SquareCheck(checked: bool, on_toggle: Callback<()>, aria_label: String) -> impl IntoView {
     view! {
         <button
             type="button"

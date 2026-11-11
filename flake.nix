@@ -28,9 +28,13 @@
           lld
           binaryen
           cargo-binstall
+          nodejs
+          playwright-driver.browsers
         ];
 
         shellHook = ''
+          export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
+          export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="1"
           export CARGO_HOME="$PWD/.direnv/cargo"
           export PATH="$CARGO_HOME/bin:$PATH"
           export RUST_SRC_PATH="${pkgs.rustPlatform.rustLibSrc}"
