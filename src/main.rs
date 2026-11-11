@@ -41,6 +41,8 @@ async fn main() {
     };
 
     let app = Router::new()
+        .route("/health", axum::routing::get(health_check))
+        .route("/api/health", axum::routing::get(health_check))
         .route(
             "/api/lockdown/:secret",
             axum::routing::get(trak::backend::lockdown_api::get_lockdown_status_handler),
@@ -77,8 +79,57 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     println!("⚡ Trak server listening on http://{}", addr);
     axum::serve(listener, app.into_make_service())
+        .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
+    println!("✓ Trak server exited cleanly.");
+}
+
+#[cfg(feature = "ssr")]
+async fn health_check(
+    axum::extract::State(state): axum::extract::State<trak::backend::AppState>,
+) -> impl axum::response::IntoResponse {
+    match sqlx::query("SELECT 1").execute(&state.pool).await {
+        Ok(_) => (
+            axum::http::StatusCode::OK,
+            axum::Json(serde_json::json!({
+                "status": "ready",
+                "app": "trak"
+            })),
+        ),
+        Err(e) => (
+            axum::http::StatusCode::SERVICE_UNAVAILABLE,
+            axum::Json(serde_json::json!({
+                "status": "error",
+                "error": e.to_string()
+            })),
+        ),
+    }
+}
+
+#[cfg(feature = "ssr")]
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => println!("🛑 Received SIGINT (Ctrl+C). Shutting down Trak..."),
+        _ = terminate => println!("🛑 Received SIGTERM. Shutting down Trak gracefully..."),
+    }
 }
 
 #[cfg(not(feature = "ssr"))]

@@ -1,0 +1,25 @@
+services:
+  trak:
+    image: ghcr.io/davindakhrisna/trak:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trak
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - LEPTOS_SITE_ADDR=0.0.0.0:3000
+      - DATABASE_URL=sqlite:///var/lib/trak/trak.db
+      - SESSION_SECRET=replace_with_a_secure_random_32_plus_character_string
+    volumes:
+      - trak_data:/var/lib/trak
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  trak_data:
