@@ -73,12 +73,21 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Install cargo-leptos & tailwindcss
+      - name: Install cargo-leptos via cargo-binstall
         run: |
-          cargo install cargo-leptos --locked
-          npm install -D tailwindcss
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall --no-confirm cargo-leptos
+
+      - name: Install Tailwind CSS v3 CLI
+        run: |
+          curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-linux-x64
+          chmod +x tailwindcss-linux-x64
+          sudo mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+          tailwindcss --help | head -n 2
 
       - name: Build Production Release
+        env:
+          LEPTOS_TAILWIND_VERSION: v3.4.17
         run: cargo leptos build --release
 
       - name: Package Release Archive
