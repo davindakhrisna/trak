@@ -38,7 +38,7 @@ async function run() {
   // -------------------------------------------------------------------------
   console.log("--> STEP 1: Uninitialized Instance State & Route Bouncing");
   await page.goto(`${BASE_URL}/`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(400);
+  await page.waitForSelector("text=Register first admin", { timeout: 6000 });
 
   assert(page.url().includes("/login"), "Unauthenticated request to '/' bounces to '/login'");
 
@@ -184,6 +184,15 @@ async function run() {
 
   const feedback = await page.innerText("body");
   assert(feedback.includes("Settings saved successfully"), "Unified Save successfully persisted settings");
+
+  // Verify Mobile App Lockdown API endpoint returns valid status
+  const lockdownApiSnippet = await page.locator(".break-all.select-all").first().innerText();
+  assert(lockdownApiSnippet.includes("/api/lockdown/"), "Lockdown private API URL is rendered");
+  const lockdownUrl = new URL(lockdownApiSnippet.trim(), BASE_URL).href;
+  const lockdownResp = await page.request.get(lockdownUrl);
+  assert(lockdownResp.status() === 200, "Mobile App Lockdown endpoint returns HTTP 200 OK");
+  const lockdownJson = await lockdownResp.json();
+  assert(lockdownJson.locked === false, "Lockdown status is clear (locked: false)");
 
   await page.screenshot({ path: path.join(ARTIFACT_DIR, "e2e_06_settings_configured.png") });
 

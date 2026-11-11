@@ -54,8 +54,8 @@ jobs:
       - name: Check WASM Client
         run: cargo check --target wasm32-unknown-unknown --no-default-features --features hydrate
 
-      - name: Run Tests
-        run: cargo test --bin trak --lib
+      - name: Run Security, Ntfy & Lockdown Integration Tests
+        run: cargo test --features ssr
 
   release:
     name: Release Assets
