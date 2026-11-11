@@ -1,3 +1,69 @@
-/target
-/.direnv
+# Rust / Cargo
+/target/
 Cargo.lock
+**/*.rs.bk
+
+# Leptos / Frontend build artifacts
+/dist/
+/pkg/
+*.wasm
+
+# Node.js / Playwright
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json
+
+# Test & E2E outputs
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# SQLite databases & runtime WAL/SHM journals
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+
+# Environment variables & secrets
+.env
+*.env
+*.env.local
+*.env.*.local
+!.env.example
+!.envrc
+
+# Development environments & Nix
+/.direnv/
+/.devenv/
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDEs & Text Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace

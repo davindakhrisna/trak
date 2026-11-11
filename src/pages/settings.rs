@@ -38,7 +38,7 @@ pub fn SettingsPage() -> impl IntoView {
                         set_settings.set(Some(saved));
                         set_feedback.set(Some("Settings saved successfully.".to_string()));
                     }
-                    Err(e) => set_feedback.set(Some(e.to_string())),
+                    Err(e) => set_feedback.set(Some(crate::domain::clean_err(e))),
                 }
             });
         }
@@ -51,7 +51,7 @@ pub fn SettingsPage() -> impl IntoView {
                 Ok(()) => set_feedback.set(Some(
                     "Test notification sent! Check your device.".to_string(),
                 )),
-                Err(e) => set_feedback.set(Some(e.to_string())),
+                Err(e) => set_feedback.set(Some(crate::domain::clean_err(e))),
             }
         });
     });
@@ -119,14 +119,10 @@ pub fn SettingsPage() -> impl IntoView {
     view! {
         <MonolithShell active_path="/settings" wide=true>
             {move || {
-                if store.auth_initialized.get() && store.current_user_id.get().is_none() {
-                    view! {
-                        <section class="w-full border border-black dark:border-white p-8 flex flex-col items-center justify-center gap-4 bg-white dark:bg-black">
-                            <h1 class="text-2xl font-bold text-black dark:text-white">"Sign In Required"</h1>
-                            <p class="text-sm text-gray">"Sign in to manage notifications and lockdown."</p>
-                            <a href="/login" class="btn-monolith-solid">"Go to Sign in"</a>
-                        </section>
-                    }.into_any()
+                if !store.auth_initialized.get() {
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Verifying session..."</div> }.into_any()
+                } else if store.current_user_id.get().is_none() {
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Redirecting to sign in..."</div> }.into_any()
                 } else if settings.get().is_some() {
                     view! {
                         <section class="w-full flex flex-col items-center justify-center gap-6">

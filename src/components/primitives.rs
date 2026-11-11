@@ -1,4 +1,4 @@
-use crate::components::nav::AppNavigation;
+use crate::components::nav::{DesktopSidebar, MobileNav};
 use crate::components::theme::ThemeSelector;
 use leptos::prelude::*;
 
@@ -9,13 +9,18 @@ pub fn MonolithShell(
     #[prop(optional)] wide: bool,
     children: Children,
 ) -> impl IntoView {
-    let spine_class = if wide {
-        "monolith-spine-wide"
+    let spine_width_class = if wide {
+        "w-full md:w-[780px] max-w-spine-wide"
     } else {
-        "monolith-spine"
+        "w-full md:w-[440px] max-w-spine"
     };
 
     if hide_nav {
+        let spine_class = if wide {
+            "monolith-spine-wide"
+        } else {
+            "monolith-spine"
+        };
         return view! {
             <div class="monolith-page">
                 <div class=spine_class>
@@ -32,13 +37,18 @@ pub fn MonolithShell(
     }
 
     view! {
-        <div class="min-h-screen w-full bg-white dark:bg-black text-black dark:text-white flex flex-col md:flex-row transition-colors duration-75">
-            <AppNavigation active_path=active_path />
-            <main class="flex-1 min-w-0 flex flex-col items-center justify-start px-4 py-8 md:py-12 overflow-y-auto">
-                <div class=spine_class>
-                    {children()}
+        <div class="min-h-screen w-full bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-start md:justify-center transition-colors duration-75">
+            <MobileNav active_path=active_path />
+            <div class="w-full flex-1 md:flex-none flex flex-col items-center justify-center px-4 py-6 md:py-12">
+                <div class="w-fit max-w-full mx-auto flex flex-col md:flex-row items-center md:items-stretch justify-center gap-6 lg:gap-8">
+                    <DesktopSidebar active_path=active_path />
+                    <main class="flex flex-col items-center justify-center text-center">
+                        <div class=format!("{} mx-auto flex flex-col items-center text-center", spine_width_class)>
+                            {children()}
+                        </div>
+                    </main>
                 </div>
-            </main>
+            </div>
         </div>
     }
     .into_any()

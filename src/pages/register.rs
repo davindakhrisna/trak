@@ -42,7 +42,7 @@ pub fn RegisterPage() -> impl IntoView {
                         let _ = win.location().set_href("/");
                     }
                 }
-                Err(err) => set_feedback.set(Some(err.to_string())),
+                Err(err) => set_feedback.set(Some(crate::domain::clean_err(err))),
             }
         });
     };
@@ -104,24 +104,18 @@ pub fn RegisterPage() -> impl IntoView {
                         }
                             .into_any()
                     } else {
+                        #[cfg(target_arch = "wasm32")]
+                        if let Some(win) = web_sys::window() {
+                            let _ = win.location().set_href("/login");
+                        }
                         view! {
                             <div class="w-full border border-black dark:border-white p-6 flex flex-col items-center gap-4 bg-white dark:bg-black">
                                 <p class="text-sm text-black dark:text-white">
-                                    "The initial administrator has already been registered. New accounts can only be added by an admin in /users."
+                                    "Registration is closed. Redirecting to sign in..."
                                 </p>
                                 <a href="/login" class="btn-monolith-solid">
                                     "Go to Sign in"
                                 </a>
-                                <button
-                                    type="button"
-                                    on:click=move |_| {
-                                        store.reset_to_first_boot();
-                                        set_feedback.set(None);
-                                    }
-                                    class="btn-monolith-ghost w-full py-2.5"
-                                >
-                                    "Reset to 0 users (preview initial setup)"
-                                </button>
                             </div>
                         }
                             .into_any()

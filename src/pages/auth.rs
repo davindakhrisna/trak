@@ -6,8 +6,8 @@ use leptos::prelude::*;
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let store = use_app_store();
-    let (username, set_username) = signal("admin".to_string());
-    let (password, set_password) = signal("password".to_string());
+    let (username, set_username) = signal(String::new());
+    let (password, set_password) = signal(String::new());
     let (status, set_status) = signal(Option::<String>::None);
 
     Effect::new(move |_| {
@@ -37,7 +37,7 @@ pub fn LoginPage() -> impl IntoView {
                         let _ = win.location().set_href("/");
                     }
                 }
-                Err(err) => set_status.set(Some(err.to_string())),
+                Err(err) => set_status.set(Some(crate::domain::clean_err(err))),
             }
         });
     };
@@ -50,7 +50,7 @@ pub fn LoginPage() -> impl IntoView {
                     <p class="text-xs text-gray">
                         {move || {
                             if store.has_any_user() {
-                                "Registration is closed. Contact an administrator for an account."
+                                "Enter your credentials to continue."
                             } else {
                                 "Instance uninitialized. Register the first administrator account."
                             }
@@ -111,41 +111,6 @@ pub fn LoginPage() -> impl IntoView {
                             .into_any()
                     }
                 }}
-
-                <div class="w-full border border-gray p-4 flex flex-col items-center gap-2 bg-white dark:bg-black">
-                    <span class="text-xs text-gray">
-                        "Preview session"
-                    </span>
-                    <div class="w-full flex flex-wrap items-center justify-center gap-2">
-                        <button
-                            type="button"
-                            on:click=move |_| {
-                                let _ = store.login("admin".to_string(), "password".to_string());
-                                set_status.set(Some("Active session: admin (admin)".to_string()));
-                            }
-                            class="btn-monolith-ghost"
-                        >
-                            "Admin"
-                        </button>
-                        <button
-                            type="button"
-                            on:click=move |_| {
-                                let _ = store.login("marcus_aurelius_operations".to_string(), "password".to_string());
-                                set_status.set(Some("Active session: marcus_aurelius_operations (user)".to_string()));
-                            }
-                            class="btn-monolith-ghost"
-                        >
-                            "Standard user"
-                        </button>
-                        <a
-                            href="/register"
-                            on:click=move |_| store.reset_to_first_boot()
-                            class="btn-monolith-ghost"
-                        >
-                            "Simulate first register"
-                        </a>
-                    </div>
-                </div>
             </section>
         </MonolithShell>
     }

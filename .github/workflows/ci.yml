@@ -1,0 +1,99 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format Check
+        run: cargo fmt --check
+
+      - name: Clippy (SSR)
+        run: cargo clippy -- -D warnings
+
+  test-and-build:
+    name: Test & WASM Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check WASM Client
+        run: cargo check --target wasm32-unknown-unknown --no-default-features --features hydrate
+
+      - name: Run Tests
+        run: cargo test --bin trak --lib
+
+  release:
+    name: Release Assets
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [lint, test-and-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install cargo-leptos & tailwindcss
+        run: |
+          cargo install cargo-leptos --locked
+          npm install -D tailwindcss
+
+      - name: Build Production Release
+        run: cargo leptos build --release
+
+      - name: Package Release Archive
+        run: |
+          mkdir -p release-bundle/site
+          cp target/release/trak release-bundle/
+          cp -r target/site/* release-bundle/site/
+          cp deploy/* release-bundle/ 2>/dev/null || true
+          cp .env.example release-bundle/
+          tar -czf trak-linux-x86_64.tar.gz -C release-bundle .
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: trak-linux-x86_64.tar.gz
+          draft: false
+          prerelease: false
+          generate_release_notes: true

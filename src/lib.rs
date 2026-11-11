@@ -7,10 +7,11 @@ pub mod pages;
 pub mod state;
 
 use crate::pages::{LoginPage, RegisterPage, SettingsPage, TemplatesPage, TodayPage, UsersPage};
-use crate::state::provide_app_store;
+use crate::state::{provide_app_store, use_app_store};
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::components::{Route, Router, Routes};
+use leptos_router::hooks::{use_location, use_navigate};
 use leptos_router::path;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
@@ -38,6 +39,43 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
             </body>
         </html>
     }
+}
+
+#[component]
+fn RouteGuard() -> impl IntoView {
+    let store = use_app_store();
+    let location = use_location();
+    let navigate = use_navigate();
+
+    Effect::new(move |_| {
+        if !store.auth_initialized.get() {
+            return;
+        }
+
+        let path = location.pathname.get();
+        let is_authed = store.current_user_id.get().is_some();
+        let has_admin = store.has_any_user();
+
+        if has_admin && (path == "/register" || path == "/registers") {
+            navigate("/login", Default::default());
+            #[cfg(target_arch = "wasm32")]
+            if let Some(win) = web_sys::window() {
+                let _ = win.location().set_href("/login");
+            }
+            return;
+        }
+
+        if !is_authed {
+            let is_setup = !has_admin && (path == "/register" || path == "/registers");
+            if path != "/login" && !is_setup {
+                navigate("/login", Default::default());
+                #[cfg(target_arch = "wasm32")]
+                if let Some(win) = web_sys::window() {
+                    let _ = win.location().set_href("/login");
+                }
+            }
+        }
+    });
 }
 
 #[component]
@@ -72,6 +110,7 @@ pub fn App() -> impl IntoView {
         <Title text="Trak — Today"/>
 
         <Router>
+            <RouteGuard/>
             <Routes fallback=|| {
                 view! {
                     <div class="monolith-page">

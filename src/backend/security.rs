@@ -162,3 +162,62 @@ pub async fn apply_security_headers(req: Request, next: Next) -> Response {
     }
     res
 }
+
+#[cfg(feature = "ssr")]
+pub async fn enforce_route_auth(
+    axum::extract::State(state): axum::extract::State<crate::backend::AppState>,
+    req: Request,
+    next: Next,
+) -> Response {
+    use axum::response::IntoResponse;
+    use http::header::COOKIE;
+    use sqlx::Row;
+
+    let path = req.uri().path();
+
+    if path.starts_with("/pkg") || path.starts_with("/api") || path == "/favicon.ico" {
+        return next.run(req).await;
+    }
+
+    let user_count: i64 = sqlx::query("SELECT COUNT(*) as c FROM users")
+        .fetch_one(&state.pool)
+        .await
+        .map(|r| r.get("c"))
+        .unwrap_or(0);
+    let has_admin = user_count > 0;
+
+    if has_admin && (path == "/register" || path == "/registers") {
+        return axum::response::Redirect::to("/login").into_response();
+    }
+
+    let mut is_authed = false;
+    if let Some(cookie_header) = req.headers().get(COOKIE).and_then(|v| v.to_str().ok()) {
+        for pair in cookie_header.split(';') {
+            let mut kv = pair.trim().split('=');
+            if let (Some(k), Some(v)) = (kv.next(), kv.next()) {
+                if k == crate::backend::auth::SESSION_COOKIE_NAME {
+                    if let Some(claims) = crate::backend::auth::verify_token(v, &state.secret) {
+                        let exists = sqlx::query("SELECT 1 FROM users WHERE id = ?")
+                            .bind(&claims.user_id)
+                            .fetch_optional(&state.pool)
+                            .await
+                            .map(|r| r.is_some())
+                            .unwrap_or(false);
+                        if exists {
+                            is_authed = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if !is_authed {
+        let is_allowed_setup = !has_admin && (path == "/register" || path == "/registers");
+        if path != "/login" && !is_allowed_setup {
+            return axum::response::Redirect::to("/login").into_response();
+        }
+    }
+
+    next.run(req).await
+}

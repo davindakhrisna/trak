@@ -158,3 +158,25 @@ pub struct LockdownStatus {
     pub missed_deadlines: i64,
     pub reason: String,
 }
+
+pub fn clean_err(err: impl ToString) -> String {
+    let mut s = err.to_string();
+    let prefixes = [
+        "error running server function: ",
+        "error running server function:",
+        "Server function error: ",
+        "Server function error:",
+    ];
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for p in prefixes {
+            if s.starts_with(p) {
+                s = s[p.len()..].trim().to_string();
+                changed = true;
+                break;
+            }
+        }
+    }
+    s
+}

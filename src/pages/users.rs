@@ -33,7 +33,7 @@ pub fn UsersPage() -> impl IntoView {
                     set_as_admin.set(false);
                     set_feedback.set(Some(format!("Added user '{}'.", u.trim())));
                 }
-                Err(err) => set_feedback.set(Some(err.to_string())),
+                Err(err) => set_feedback.set(Some(crate::domain::clean_err(err))),
             }
         });
     };
@@ -41,19 +41,16 @@ pub fn UsersPage() -> impl IntoView {
     view! {
         <MonolithShell active_path="/users" wide=true>
             {move || {
-                if !store.is_admin() {
-                    view! {
-                        <section class="w-full border border-black dark:border-white p-8 flex flex-col items-center justify-center gap-4 bg-white dark:bg-black">
-                            <h1 class="text-2xl font-bold text-black dark:text-white">"Admin Only"</h1>
-                            <p class="text-sm text-gray">
-                                "Only administrators can view and manage users."
-                            </p>
-                            <a href="/login" class="btn-monolith-solid">
-                                "Sign in with admin account"
-                            </a>
-                        </section>
+                if !store.auth_initialized.get() {
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Verifying session..."</div> }.into_any()
+                } else if store.current_user_id.get().is_none() {
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Redirecting to sign in..."</div> }.into_any()
+                } else if !store.is_admin() {
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(win) = web_sys::window() {
+                        let _ = win.location().set_href("/");
                     }
-                        .into_any()
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Admin privileges required. Redirecting..."</div> }.into_any()
                 } else {
                     view! {
                         <section class="w-full flex flex-col items-center justify-center gap-6">

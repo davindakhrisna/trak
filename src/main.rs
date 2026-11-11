@@ -63,6 +63,10 @@ async fn main() {
             ServeDir::new(format!("{}/pkg", leptos_options.site_root)),
         )
         .fallback(leptos_axum::file_and_error_handler::<AppState, _>(shell))
+        .layer(axum::middleware::from_fn_with_state(
+            app_state.clone(),
+            trak::backend::security::enforce_route_auth,
+        ))
         .layer(axum::middleware::from_fn(
             trak::backend::security::apply_security_headers,
         ))

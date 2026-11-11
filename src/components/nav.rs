@@ -2,44 +2,46 @@ use crate::components::theme::ThemeSelector;
 use crate::state::use_app_store;
 use leptos::prelude::*;
 
+fn nav_link_class(active: bool) -> &'static str {
+    if active {
+        "w-full px-3 py-1.5 font-mono text-xs font-bold bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white text-left select-none transition-colors duration-75"
+    } else {
+        "w-full px-3 py-1.5 font-mono text-xs text-black dark:text-white bg-white dark:bg-black border border-transparent hover:border-black dark:hover:border-white text-left select-none transition-colors duration-75"
+    }
+}
+
+fn mobile_link_class(active: bool) -> &'static str {
+    if active {
+        "px-3 py-1 font-mono text-xs font-bold bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white shrink-0 select-none transition-colors duration-75"
+    } else {
+        "px-3 py-1 font-mono text-xs text-black dark:text-white bg-white dark:bg-black border border-transparent hover:border-black dark:hover:border-white shrink-0 select-none transition-colors duration-75"
+    }
+}
+
+fn handle_logout(store: crate::state::AppStore) {
+    leptos::task::spawn_local(async move {
+        let _ = crate::backend::api_auth::logout().await;
+        store.current_user_id.set(None);
+        #[cfg(target_arch = "wasm32")]
+        if let Some(win) = web_sys::window() {
+            let _ = win.location().set_href("/login");
+        }
+    });
+}
+
 #[component]
-pub fn AppNavigation(active_path: &'static str) -> impl IntoView {
+pub fn DesktopSidebar(active_path: &'static str) -> impl IntoView {
     let store = use_app_store();
-
-    let sidebar_link_class = move |path: &'static str| {
-        if active_path == path {
-            "w-full px-3.5 py-2 font-mono text-xs font-bold bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white text-left select-none transition-colors duration-75"
-        } else {
-            "w-full px-3.5 py-2 font-mono text-xs text-black dark:text-white bg-white dark:bg-black border border-transparent hover:border-black dark:hover:border-white text-left select-none transition-colors duration-75"
-        }
-    };
-
-    let mobile_link_class = move |path: &'static str| {
-        if active_path == path {
-            "px-3 py-1 font-mono text-xs font-bold bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white shrink-0 select-none transition-colors duration-75"
-        } else {
-            "px-3 py-1 font-mono text-xs text-black dark:text-white bg-white dark:bg-black border border-transparent hover:border-black dark:hover:border-white shrink-0 select-none transition-colors duration-75"
-        }
-    };
-
     let on_sign_out = move |ev: leptos::ev::MouseEvent| {
         ev.prevent_default();
-        leptos::task::spawn_local(async move {
-            let _ = crate::backend::api_auth::logout().await;
-            store.current_user_id.set(None);
-            #[cfg(target_arch = "wasm32")]
-            if let Some(win) = web_sys::window() {
-                let _ = win.location().set_href("/login");
-            }
-        });
+        handle_logout(store);
     };
 
     view! {
-        // Desktop Sidebar (hidden on mobile, fixed full-height rail on md+)
-        <aside class="hidden md:flex md:w-56 lg:w-64 shrink-0 flex-col justify-between border-r border-black dark:border-white p-6 bg-white dark:bg-black sticky top-0 h-screen overflow-y-auto">
-            <div class="flex flex-col gap-6">
-                <div class="flex flex-col gap-0.5 border-b border-black dark:border-white pb-4 text-left">
-                    <span class="font-sans font-bold text-xl tracking-tighter text-black dark:text-white">
+        <aside class="hidden md:flex flex-col justify-between w-40 lg:w-44 shrink-0 text-left border-r border-black dark:border-white pr-6 py-1 self-stretch min-h-[280px] max-h-[calc(100vh-6rem)] sticky top-8 lg:top-12 gap-6">
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-0.5 border-b border-black dark:border-white pb-3 text-left">
+                    <span class="font-sans font-bold text-lg tracking-tighter text-black dark:text-white">
                         "TRAK"
                     </span>
                     <span class="font-mono text-[9px] text-gray uppercase tracking-wider">
@@ -47,19 +49,19 @@ pub fn AppNavigation(active_path: &'static str) -> impl IntoView {
                     </span>
                 </div>
 
-                <nav aria-label="Sidebar navigation" class="flex flex-col gap-1 w-full">
-                    <a href="/" class=move || sidebar_link_class("/")>"Today"</a>
-                    <a href="/templates" class=move || sidebar_link_class("/templates")>"Templates"</a>
-                    <a href="/settings" class=move || sidebar_link_class("/settings")>"Settings"</a>
+                <nav aria-label="Desktop sidebar navigation" class="flex flex-col gap-1 w-full">
+                    <a href="/" class=nav_link_class(active_path == "/")>"Today"</a>
+                    <a href="/templates" class=nav_link_class(active_path == "/templates")>"Templates"</a>
+                    <a href="/settings" class=nav_link_class(active_path == "/settings")>"Settings"</a>
                     {move || if store.is_admin() {
-                        view! { <a href="/users" class=move || sidebar_link_class("/users")>"Users"</a> }.into_any()
+                        view! { <a href="/users" class=nav_link_class(active_path == "/users")>"Users"</a> }.into_any()
                     } else {
                         ().into_any()
                     }}
                 </nav>
             </div>
 
-            <div class="flex flex-col gap-3 border-t border-black dark:border-white pt-4 text-left font-mono text-[11px] text-gray">
+            <div class="flex flex-col gap-3 border-t border-black dark:border-white pt-4 text-left font-mono text-[11px] text-gray mt-auto">
                 {move || {
                     if let Some(user) = store.current_user() {
                         let display_name = user.username.clone();
@@ -87,11 +89,21 @@ pub fn AppNavigation(active_path: &'static str) -> impl IntoView {
                 </div>
             </div>
         </aside>
+    }
+}
 
-        // Mobile Top Header (hidden on desktop md+)
+#[component]
+pub fn MobileNav(active_path: &'static str) -> impl IntoView {
+    let store = use_app_store();
+    let on_sign_out = move |ev: leptos::ev::MouseEvent| {
+        ev.prevent_default();
+        handle_logout(store);
+    };
+
+    view! {
         <header class="flex md:hidden w-full flex-col border-b border-black dark:border-white bg-white dark:bg-black sticky top-0 z-30">
-            <div class="w-full flex items-center justify-between px-4 py-2.5 border-b border-black dark:border-white">
-                <span class="font-sans font-bold text-lg tracking-tight">"TRAK"</span>
+            <div class="w-full flex items-center justify-between px-4 py-2 border-b border-black dark:border-white">
+                <span class="font-sans font-bold text-base tracking-tight">"TRAK"</span>
                 <div class="flex items-center gap-2 font-mono text-[11px] text-gray">
                     {move || {
                         if let Some(user) = store.current_user() {
@@ -115,11 +127,11 @@ pub fn AppNavigation(active_path: &'static str) -> impl IntoView {
             </div>
 
             <nav aria-label="Mobile navigation" class="w-full flex items-center justify-start gap-1 px-3 py-1.5 overflow-x-auto scroll-monolith">
-                <a href="/" class=move || mobile_link_class("/")>"Today"</a>
-                <a href="/templates" class=move || mobile_link_class("/templates")>"Templates"</a>
-                <a href="/settings" class=move || mobile_link_class("/settings")>"Settings"</a>
+                <a href="/" class=mobile_link_class(active_path == "/")>"Today"</a>
+                <a href="/templates" class=mobile_link_class(active_path == "/templates")>"Templates"</a>
+                <a href="/settings" class=mobile_link_class(active_path == "/settings")>"Settings"</a>
                 {move || if store.is_admin() {
-                    view! { <a href="/users" class=move || mobile_link_class("/users")>"Users"</a> }.into_any()
+                    view! { <a href="/users" class=mobile_link_class(active_path == "/users")>"Users"</a> }.into_any()
                 } else {
                     ().into_any()
                 }}

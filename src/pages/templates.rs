@@ -51,8 +51,6 @@ pub fn TemplatesPage() -> impl IntoView {
                         .await
                 {
                     store.templates.update(|l| l.push(tpl));
-                } else {
-                    store.add_template(sel_day, text, st_opt, dl_opt);
                 }
             });
         }
@@ -68,28 +66,10 @@ pub fn TemplatesPage() -> impl IntoView {
     view! {
         <MonolithShell active_path="/templates" wide=true>
             {move || {
-                if store.auth_initialized.get() && store.current_user_id.get().is_none() {
-                    view! {
-                        <section class="w-full border border-black dark:border-white p-8 flex flex-col items-center justify-center gap-4 bg-white dark:bg-black">
-                            <h1 class="text-2xl font-bold text-black dark:text-white">
-                                {if store.has_any_user() { "Sign In Required" } else { "Welcome to Trak" }}
-                            </h1>
-                            <p class="text-sm text-gray">
-                                {if store.has_any_user() {
-                                    "Sign in to manage recurring template schedules."
-                                } else {
-                                    "Setup the initial administrator account to begin."
-                                }}
-                            </p>
-                            <a
-                                href=if store.has_any_user() { "/login" } else { "/register" }
-                                class="btn-monolith-solid"
-                            >
-                                {if store.has_any_user() { "Go to Sign in" } else { "Setup root admin" }}
-                            </a>
-                        </section>
-                    }
-                        .into_any()
+                if !store.auth_initialized.get() {
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Verifying session..."</div> }.into_any()
+                } else if store.current_user_id.get().is_none() {
+                    view! { <div class="py-12 font-mono text-xs text-gray">"Redirecting to sign in..."</div> }.into_any()
                 } else {
                     view! {
                         <section class="w-full flex flex-col items-center justify-center gap-6">
