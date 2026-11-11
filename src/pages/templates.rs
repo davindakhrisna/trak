@@ -101,18 +101,18 @@ pub fn TemplatesPage() -> impl IntoView {
                                     on:click=move |_| store.selected_day.set(day)
                                     class=move || {
                                         if is_selected() {
-                                            "py-3 flex flex-col items-center justify-center gap-0.5 bg-black dark:bg-white text-white dark:text-black border-r border-black dark:border-white last:border-r-0 font-mono text-xs cursor-pointer transition-colors duration-75"
+                                            "py-2 sm:py-3 flex flex-col items-center justify-center gap-0.5 bg-black dark:bg-white text-white dark:text-black border-r border-black dark:border-white last:border-r-0 font-mono text-[11px] sm:text-xs cursor-pointer transition-colors duration-75"
                                         } else {
-                                            "py-3 flex flex-col items-center justify-center gap-0.5 bg-white dark:bg-black text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black border-r border-black dark:border-white last:border-r-0 font-mono text-xs transition-colors duration-75 cursor-pointer"
+                                            "py-2 sm:py-3 flex flex-col items-center justify-center gap-0.5 bg-white dark:bg-black text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black border-r border-black dark:border-white last:border-r-0 font-mono text-[11px] sm:text-xs transition-colors duration-75 cursor-pointer"
                                         }
                                     }
                                 >
                                     <span class="font-bold">{day.code()}</span>
                                     <span class=move || {
                                         if is_selected() {
-                                            "text-[10px] text-white dark:text-black"
+                                            "text-[9px] sm:text-[10px] text-white dark:text-black"
                                         } else {
-                                            "text-[10px] text-gray"
+                                            "text-[9px] sm:text-[10px] text-gray"
                                         }
                                     }>{move || count_for_day()}</span>
                                 </button>
@@ -125,39 +125,41 @@ pub fn TemplatesPage() -> impl IntoView {
                     on:submit=on_submit
                     class="w-full flex flex-col items-center gap-2"
                 >
-                    <div class="w-full flex items-stretch border border-black dark:border-white bg-white dark:bg-black">
+                    <div class="w-full flex flex-col sm:flex-row items-stretch border border-black dark:border-white bg-white dark:bg-black">
                         <input
                             type="text"
                             placeholder="New recurring task..."
                             maxlength="200"
                             prop:value=move || draft.get()
                             on:input=move |ev| set_draft.set(event_target_value(&ev))
-                            class="flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 sm:px-4 py-3 text-left text-sm focus:outline-none"
+                            class="w-full sm:flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 sm:px-4 py-3 text-left text-sm focus:outline-none border-b sm:border-b-0 sm:border-r border-black dark:border-white"
                         />
-                        <input
-                            type="text"
-                            placeholder="Start"
-                            title="Start time (e.g. 09:00)"
-                            maxlength="20"
-                            prop:value=move || start_time.get()
-                            on:input=move |ev| set_start_time.set(event_target_value(&ev))
-                            class="w-20 sm:w-28 border-l border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-2 sm:px-3 py-3 text-left text-xs font-mono focus:outline-none shrink-0"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Due"
-                            title="Deadline (e.g. 10:00)"
-                            maxlength="20"
-                            prop:value=move || deadline.get()
-                            on:input=move |ev| set_deadline.set(event_target_value(&ev))
-                            class="w-20 sm:w-28 border-l border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-2 sm:px-3 py-3 text-left text-xs font-mono focus:outline-none shrink-0"
-                        />
-                        <button
-                            type="submit"
-                            class="px-3 sm:px-5 py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs border-l border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0"
-                        >
-                            "Save"
-                        </button>
+                        <div class="flex items-stretch w-full sm:w-auto shrink-0">
+                            <input
+                                type="text"
+                                placeholder="Start"
+                                title="Start time (e.g. 09:00)"
+                                maxlength="20"
+                                prop:value=move || start_time.get()
+                                on:input=move |ev| set_start_time.set(event_target_value(&ev))
+                                class="w-1/2 sm:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Due"
+                                title="Deadline (e.g. 10:00)"
+                                maxlength="20"
+                                prop:value=move || deadline.get()
+                                on:input=move |ev| set_deadline.set(event_target_value(&ev))
+                                class="w-1/2 sm:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                            />
+                            <button
+                                type="submit"
+                                class="px-4 sm:px-5 py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0 font-bold"
+                            >
+                                "Save"
+                            </button>
+                        </div>
                     </div>
                 </form>
 

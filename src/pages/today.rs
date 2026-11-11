@@ -102,43 +102,45 @@ pub fn TodayPage() -> impl IntoView {
                 </div>
 
                 <form on:submit=on_submit class="w-full flex flex-col items-center gap-2">
-                    <div class="w-full flex items-stretch border border-black dark:border-white bg-white dark:bg-black">
+                    <div class="w-full flex flex-col sm:flex-row items-stretch border border-black dark:border-white bg-white dark:bg-black">
                         <input
                             type="text"
                             placeholder="Write a task..."
                             maxlength="200"
                             prop:value=move || draft.get()
                             on:input=move |ev| set_draft.set(event_target_value(&ev))
-                            class="flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 sm:px-4 py-3 text-left text-sm focus:outline-none"
+                            class="w-full sm:flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 sm:px-4 py-3 text-left text-sm focus:outline-none border-b sm:border-b-0 sm:border-r border-black dark:border-white"
                         />
-                        <input
-                            type="text"
-                            placeholder="Start"
-                            title="Start time (e.g. 09:00)"
-                            maxlength="20"
-                            prop:value=move || start_time.get()
-                            on:input=move |ev| set_start_time.set(event_target_value(&ev))
-                            class="w-20 sm:w-28 border-l border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-2 sm:px-3 py-3 text-left text-xs font-mono focus:outline-none shrink-0"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Due"
-                            title="Deadline (e.g. 17:00)"
-                            maxlength="20"
-                            prop:value=move || deadline.get()
-                            on:input=move |ev| set_deadline.set(event_target_value(&ev))
-                            class="w-20 sm:w-28 border-l border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-2 sm:px-3 py-3 text-left text-xs font-mono focus:outline-none shrink-0"
-                        />
-                        <button
-                            type="submit"
-                            class="px-3 sm:px-5 py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs border-l border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0"
-                        >
-                            "Add"
-                        </button>
+                        <div class="flex items-stretch w-full sm:w-auto shrink-0">
+                            <input
+                                type="text"
+                                placeholder="Start"
+                                title="Start time (e.g. 09:00)"
+                                maxlength="20"
+                                prop:value=move || start_time.get()
+                                on:input=move |ev| set_start_time.set(event_target_value(&ev))
+                                class="w-1/2 sm:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Due"
+                                title="Deadline (e.g. 17:00)"
+                                maxlength="20"
+                                prop:value=move || deadline.get()
+                                on:input=move |ev| set_deadline.set(event_target_value(&ev))
+                                class="w-1/2 sm:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                            />
+                            <button
+                                type="submit"
+                                class="px-4 sm:px-5 py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0 font-bold"
+                            >
+                                "Add"
+                            </button>
+                        </div>
                     </div>
                 </form>
 
-                <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-5 items-start text-left">
+                <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 items-start text-left">
                     <div class="w-full flex flex-col gap-2">
                         <div class="flex items-center justify-between px-1 pb-1 border-b border-black dark:border-white">
                             <span class="font-mono text-xs text-black dark:text-white uppercase tracking-wider">

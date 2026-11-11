@@ -37,13 +37,13 @@ pub fn MonolithShell(
     }
 
     view! {
-        <div class="min-h-screen w-full bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-start md:justify-center transition-colors duration-75">
+        <div class="min-h-screen w-full overflow-x-hidden bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-start md:justify-center transition-colors duration-75">
             <MobileNav active_path=active_path />
-            <div class="w-full flex-1 md:flex-none flex flex-col items-center justify-center px-4 py-6 md:py-12">
-                <div class="w-fit max-w-full mx-auto flex flex-col md:flex-row items-center md:items-stretch justify-center gap-6 lg:gap-8">
+            <div class="w-full flex-1 md:flex-none flex flex-col items-center justify-start md:justify-center px-3 sm:px-4 py-4 sm:py-6 md:py-12">
+                <div class="w-full md:w-fit max-w-full mx-auto flex flex-col md:flex-row items-stretch justify-center gap-6 lg:gap-8">
                     <DesktopSidebar active_path=active_path />
-                    <main class="flex flex-col items-center justify-center text-center">
-                        <div class=format!("{} mx-auto flex flex-col items-center text-center", spine_width_class)>
+                    <main class="w-full flex-1 flex flex-col items-stretch md:items-center justify-start md:justify-center text-center">
+                        <div class=format!("{} w-full max-w-full mx-auto flex flex-col items-center text-center", spine_width_class)>
                             {children()}
                         </div>
                     </main>
@@ -115,7 +115,7 @@ pub fn TodayTaskCell(
                 type="button"
                 aria-label=format!("Remove {}", task.title)
                 on:click=move |_| on_remove.run(task_id_remove.clone())
-                class="shrink-0 w-6 h-6 flex items-center justify-center font-mono text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center font-mono text-sm sm:text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
             >
                 "×"
             </button>
@@ -157,7 +157,7 @@ pub fn TemplateItemCell(
                 type="button"
                 aria-label=del_label
                 on:click=move |_| on_delete.run(tpl_id.clone())
-                class="shrink-0 w-6 h-6 flex items-center justify-center font-mono text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center font-mono text-sm sm:text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
             >
                 "×"
             </button>
