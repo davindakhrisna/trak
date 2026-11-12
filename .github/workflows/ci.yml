@@ -128,7 +128,6 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker image to GHCR
-        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -137,46 +136,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Promote image digest to nixos-vps
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          PLATFORM_TOKEN: ${{ secrets.PLATFORM_TOKEN }}
-          DIGEST: ${{ steps.docker_build.outputs.digest }}
-          TAG_NAME: ${{ github.ref_name }}
-        run: |
-          if [ -z "$PLATFORM_TOKEN" ]; then
-            echo "PLATFORM_TOKEN secret is not set, skipping nixos-vps promotion."
-            exit 0
-          fi
-
-          git config --global user.name "davindakhrisna"
-          git config --global user.email "arpeggio.gns@gmail.com"
-
-          git clone "https://x-access-token:${PLATFORM_TOKEN}@github.com/gala-edukasi-nusantara/nixos-vps.git" /tmp/nixos-vps
-          cd /tmp/nixos-vps
-
-          IMAGE_REF="ghcr.io/${{ github.repository }}@${DIGEST}"
-          echo "Promoting image: ${IMAGE_REF}"
-
-          sed -i -E "s|image = \"ghcr\.io/davindakhrisna/trak@[^\"]+\";|image = \"${IMAGE_REF}\";|" host/default.nix
-
-          if git diff --quiet host/default.nix; then
-            echo "No change in image digest."
-            exit 0
-          fi
-
-          BRANCH="auto/trak-${TAG_NAME}"
-          git checkout -b "$BRANCH"
-          git add host/default.nix
-          git commit -m "feat(trak): update image digest to ${TAG_NAME}"
-          git push -u origin "$BRANCH"
-
-          GH_TOKEN="${PLATFORM_TOKEN}" gh pr create \
-            --repo gala-edukasi-nusantara/nixos-vps \
-            --base main \
-            --head "$BRANCH" \
-            --title "feat(trak): update image digest to ${TAG_NAME}" \
-            --body "Automated promotion of release **${TAG_NAME}** from [davindakhrisna/trak](https://github.com/davindakhrisna/trak).
-
-**Image Digest:** \`${IMAGE_REF}\`"
