@@ -74,7 +74,7 @@ pub async fn check_user_tasks(
                     topic,
                     "Trak: Task Started",
                     &format!("Starting now: {}", title),
-                    2,
+                    3,
                     &["hourglass"],
                 )
                 .await;

@@ -10,13 +10,14 @@ pub fn burst_config(priority: u8) -> (usize, u64) {
 
 #[cfg(feature = "ssr")]
 pub fn calculate_step_priority(step: usize, total: usize, max_prio: u8) -> u8 {
-    if total <= 1 || max_prio <= 2 {
-        return max_prio;
+    let effective_max = max_prio.max(3);
+    if total <= 1 || effective_max <= 3 {
+        return effective_max;
     }
-    let min_prio = 2u8;
+    let min_prio = 3u8;
     let progress = step as f32 / (total - 1) as f32;
-    let prio_float = min_prio as f32 + (max_prio - min_prio) as f32 * progress;
-    (prio_float.round() as u8).clamp(1, max_prio)
+    let prio_float = min_prio as f32 + (effective_max - min_prio) as f32 * progress;
+    (prio_float.round() as u8).clamp(3, effective_max)
 }
 
 #[cfg(feature = "ssr")]
@@ -158,7 +159,8 @@ pub async fn send_single_notification(
         .map_err(|e| e.to_string())?;
 
     let tags_str = tags.join(",");
-    send_single_post(&client, &url, title, message, priority, &tags_str).await
+    let effective_prio = priority.max(3);
+    send_single_post(&client, &url, title, message, effective_prio, &tags_str).await
 }
 
 #[cfg(feature = "ssr")]
@@ -167,8 +169,8 @@ pub async fn send_test_all_priority_examples(server: &str, topic: &str) -> Resul
         server,
         topic,
         "Trak Test [1/4]: Lowest Priority",
-        "Example Priority 2: Routine reminder (low alert sound / vibration)",
-        2,
+        "Example Priority 3: Routine reminder (audible sound & vibration on iOS)",
+        3,
         &["bell"],
     )
     .await?;
@@ -182,7 +184,7 @@ pub async fn send_test_all_priority_examples(server: &str, topic: &str) -> Resul
             &server_s,
             &topic_s,
             "Trak Test [2/4]: Medium Priority",
-            "Example Priority 3: 1h deadline warning (standard chime)",
+            "Example Priority 3-4: 1h deadline warning (escalating sound & vibration)",
             3,
             &["clock1"],
         )
@@ -197,7 +199,7 @@ pub async fn send_test_all_priority_examples(server: &str, topic: &str) -> Resul
             &server_s,
             &topic_s,
             "Trak Test [3/4]: High Priority",
-            "Example Priority 4: 25m deadline warning (high alert chime)",
+            "Example Priority 4: 25m deadline warning (urgent alert chime & vibration)",
             4,
             &["warning", "rotating_light"],
         )
@@ -212,7 +214,7 @@ pub async fn send_test_all_priority_examples(server: &str, topic: &str) -> Resul
             &server_s,
             &topic_s,
             "Trak Test [4/4]: Critical Priority",
-            "Example Priority 5: Crossed deadline alarm (maximum volume override)",
+            "Example Priority 5: Crossed deadline alarm (maximum volume override & vibration)",
             5,
             &["rotating_light", "sos"],
         )

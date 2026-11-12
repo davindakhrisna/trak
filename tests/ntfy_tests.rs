@@ -124,7 +124,7 @@ mod tests {
         let prios: Vec<u8> = (0..15)
             .map(|step| calculate_step_priority(step, 15, 5))
             .collect();
-        assert_eq!(prios[0], 2, "Starts at low priority (2)");
+        assert_eq!(prios[0], 3, "Starts at audible priority (3)");
         assert_eq!(prios[14], 5, "Reaches urgent priority (5)");
         assert!(
             prios.windows(2).all(|w| w[0] <= w[1]),
@@ -133,16 +133,16 @@ mod tests {
 
         // Priority climbing for Medium (7 steps)
         let prios_med: Vec<u8> = (0..7)
-            .map(|step| calculate_step_priority(step, 7, 3))
+            .map(|step| calculate_step_priority(step, 7, 4))
             .collect();
-        assert_eq!(prios_med[0], 2);
-        assert_eq!(prios_med[6], 3);
+        assert_eq!(prios_med[0], 3);
+        assert_eq!(prios_med[6], 4);
 
         // Priority climbing for Lowest (3 steps)
         let prios_low: Vec<u8> = (0..3)
             .map(|step| calculate_step_priority(step, 3, 2))
             .collect();
-        assert_eq!(prios_low, vec![2, 2, 2]);
+        assert_eq!(prios_low, vec![3, 3, 3]);
     }
 
     #[tokio::test]

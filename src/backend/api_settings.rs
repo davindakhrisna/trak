@@ -149,25 +149,25 @@ pub async fn send_test_ntfy(priority: Option<u8>) -> Result<(), ServerFnError> {
             let (title, body, prio, tags): (&str, &str, u8, &[&str]) = match p {
                 0..=2 => (
                     "Trak Test: Lowest (3 Pulses)",
-                    "Example: Morning routine / non-critical task reminder (Priority 2, 2s cooldown)",
-                    2,
+                    "Example: Routine / non-critical reminder. 3 pulses @ 2s cooldown (audible & vibrating).",
+                    3,
                     &["bell", "hourglass"],
                 ),
                 3 => (
                     "Trak Test: Medium (7 Pulses)",
-                    "Example: 1h before deadline warning (Priority 3, 1.65s cooldown)",
-                    3,
+                    "Example: 1h before deadline warning. 7 pulses @ 1.65s cooldown (climbing 3->4).",
+                    4,
                     &["warning", "clock1"],
                 ),
                 4 => (
                     "Trak Test: High (11 Pulses)",
-                    "Example: 25m before deadline warning (Priority 4, 1.35s cooldown)",
+                    "Example: 25m before deadline warning. 11 pulses @ 1.35s cooldown (Priority 4).",
                     4,
                     &["warning", "rotating_light"],
                 ),
                 _ => (
                     "Trak Test: Critical Alarm (15 Pulses)",
-                    "Example: DEADLINE CROSSED - Action required! (Priority 2->5 climbing, 1s cooldown)",
+                    "Example: DEADLINE CROSSED - Action required! 15 pulses @ 1s cooldown (climbing 3->5).",
                     5,
                     &["rotating_light", "sos", "zap"],
                 ),
