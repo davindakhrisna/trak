@@ -6,7 +6,7 @@ use leptos::prelude::*;
 pub fn SettingsNtfyCard(
     settings: ReadSignal<Option<UserSettings>>,
     set_settings: WriteSignal<Option<UserSettings>>,
-    on_test_ntfy: Callback<()>,
+    on_test_ntfy: Callback<Option<u8>>,
     on_regen_topic: Callback<()>,
 ) -> impl IntoView {
     let cfg = move || settings.get().unwrap_or_default();
@@ -117,18 +117,72 @@ pub fn SettingsNtfyCard(
                 />
             </div>
 
-            <div class="pt-2">
+            <div class="flex flex-col gap-2 pt-2 border-t border-black dark:border-white">
+                <div class="flex items-center justify-between">
+                    <label class="font-mono text-[11px] text-gray uppercase">"Test Priority Notifications"</label>
+                    <span class="font-mono text-[10px] text-gray">"Verify device alerts"</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                        type="button"
+                        prop:disabled=move || !is_enabled()
+                        on:click=move |_| if is_enabled() { on_test_ntfy.run(Some(2)); }
+                        class=move || if is_enabled() {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate"
+                        } else {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate opacity-40 cursor-not-allowed"
+                        }
+                    >
+                        "Lowest (3x)"
+                    </button>
+                    <button
+                        type="button"
+                        prop:disabled=move || !is_enabled()
+                        on:click=move |_| if is_enabled() { on_test_ntfy.run(Some(3)); }
+                        class=move || if is_enabled() {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate"
+                        } else {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate opacity-40 cursor-not-allowed"
+                        }
+                    >
+                        "Medium (7x)"
+                    </button>
+                    <button
+                        type="button"
+                        prop:disabled=move || !is_enabled()
+                        on:click=move |_| if is_enabled() { on_test_ntfy.run(Some(4)); }
+                        class=move || if is_enabled() {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate"
+                        } else {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate opacity-40 cursor-not-allowed"
+                        }
+                    >
+                        "High (11x)"
+                    </button>
+                    <button
+                        type="button"
+                        prop:disabled=move || !is_enabled()
+                        on:click=move |_| if is_enabled() { on_test_ntfy.run(Some(5)); }
+                        class=move || if is_enabled() {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate"
+                        } else {
+                            "btn-monolith-ghost text-[11px] py-1.5 px-1 truncate opacity-40 cursor-not-allowed"
+                        }
+                    >
+                        "Highest (15x)"
+                    </button>
+                </div>
                 <button
                     type="button"
                     prop:disabled=move || !is_enabled()
-                    on:click=move |_| if is_enabled() { on_test_ntfy.run(()); }
+                    on:click=move |_| if is_enabled() { on_test_ntfy.run(None); }
                     class=move || if is_enabled() {
-                        "btn-monolith-ghost w-full text-xs"
+                        "btn-monolith-ghost w-full text-xs py-1.5"
                     } else {
-                        "btn-monolith-ghost w-full text-xs opacity-40 cursor-not-allowed"
+                        "btn-monolith-ghost w-full text-xs py-1.5 opacity-40 cursor-not-allowed"
                     }
                 >
-                    "Send Test"
+                    "Send Test (All 4 Priority Examples)"
                 </button>
             </div>
         </div>

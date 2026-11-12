@@ -130,9 +130,9 @@ pub async fn regenerate_lockdown_secret() -> Result<String, ServerFnError> {
 }
 
 #[server]
-pub async fn send_test_ntfy() -> Result<(), ServerFnError> {
+pub async fn send_test_ntfy(priority: Option<u8>) -> Result<(), ServerFnError> {
     use crate::backend::auth::get_auth_claims_from_context;
-    use crate::backend::ntfy::send_ntfy_notification;
+    use crate::backend::ntfy::{send_ntfy_notification, send_test_all_priority_examples};
     use crate::backend::settings_db::ensure_user_settings;
     use crate::backend::AppState;
 
@@ -144,16 +144,52 @@ pub async fn send_test_ntfy() -> Result<(), ServerFnError> {
         .await
         .map_err(|e| ServerFnError::new(e.to_string()))?;
 
-    send_ntfy_notification(
-        &settings.ntfy_server,
-        &settings.ntfy_topic,
-        "Trak: Test Notification",
-        "Trak ntfy connection verified! Task alerts and discipline reminders are active.",
-        3,
-        &["white_check_mark", "tada"],
-    )
-    .await
-    .map_err(ServerFnError::new)?;
+    match priority {
+        Some(p) => {
+            let (title, body, prio, tags): (&str, &str, u8, &[&str]) = match p {
+                0..=2 => (
+                    "Trak Test: Lowest (3 Pulses)",
+                    "Example: Morning routine / non-critical task reminder (Priority 2, 2s cooldown)",
+                    2,
+                    &["bell", "hourglass"],
+                ),
+                3 => (
+                    "Trak Test: Medium (7 Pulses)",
+                    "Example: 1h before deadline warning (Priority 3, 1.65s cooldown)",
+                    3,
+                    &["warning", "clock1"],
+                ),
+                4 => (
+                    "Trak Test: High (11 Pulses)",
+                    "Example: 25m before deadline warning (Priority 4, 1.35s cooldown)",
+                    4,
+                    &["warning", "rotating_light"],
+                ),
+                _ => (
+                    "Trak Test: Critical Alarm (15 Pulses)",
+                    "Example: DEADLINE CROSSED - Action required! (Priority 2->5 climbing, 1s cooldown)",
+                    5,
+                    &["rotating_light", "sos", "zap"],
+                ),
+            };
+
+            send_ntfy_notification(
+                &settings.ntfy_server,
+                &settings.ntfy_topic,
+                title,
+                body,
+                prio,
+                tags,
+            )
+            .await
+            .map_err(ServerFnError::new)?;
+        }
+        None => {
+            send_test_all_priority_examples(&settings.ntfy_server, &settings.ntfy_topic)
+                .await
+                .map_err(ServerFnError::new)?;
+        }
+    }
 
     Ok(())
 }

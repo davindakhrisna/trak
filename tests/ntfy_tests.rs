@@ -5,7 +5,9 @@ mod tests {
     use axum::Router;
     use std::sync::{Arc, Mutex};
     use tokio::net::TcpListener;
-    use trak::backend::ntfy::{burst_config, calculate_step_priority, send_ntfy_notification};
+    use trak::backend::ntfy::{
+        burst_config, calculate_step_priority, send_ntfy_notification, send_single_notification,
+    };
     use trak::backend::security::validate_outbound_url;
 
     #[tokio::test]
@@ -141,5 +143,33 @@ mod tests {
             .map(|step| calculate_step_priority(step, 3, 2))
             .collect();
         assert_eq!(prios_low, vec![2, 2, 2]);
+    }
+
+    #[tokio::test]
+    async fn test_ntfy_single_and_priority_tier_dispatch() {
+        // Verify SSRF defense blocks loopback addresses in single notification
+        let loopback_err = send_single_notification(
+            "http://127.0.0.1:8080",
+            "test-topic",
+            "Trak Test",
+            "Message",
+            5,
+            &["bell"],
+        )
+        .await;
+        assert!(loopback_err.is_err());
+        assert!(loopback_err.unwrap_err().contains("loopback"));
+
+        // Verify invalid topic rejection
+        let invalid_topic_err = send_single_notification(
+            "https://ntfy.sh",
+            "invalid topic with spaces!",
+            "Trak Test",
+            "Message",
+            4,
+            &["warning"],
+        )
+        .await;
+        assert!(invalid_topic_err.is_err());
     }
 }

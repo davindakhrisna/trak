@@ -127,3 +127,97 @@ pub async fn send_ntfy_notification(
 
     Ok(())
 }
+
+#[cfg(feature = "ssr")]
+pub async fn send_single_notification(
+    server: &str,
+    topic: &str,
+    title: &str,
+    message: &str,
+    priority: u8,
+    tags: &[&str],
+) -> Result<(), String> {
+    use crate::backend::security::validate_outbound_url;
+
+    let clean_server = validate_outbound_url(server)?;
+    let clean_topic = topic.trim();
+    if clean_topic.is_empty() || clean_topic.len() > 64 {
+        return Err("Ntfy topic must be between 1 and 64 characters.".to_string());
+    }
+    if !clean_topic
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err("Ntfy topic contains invalid characters.".to_string());
+    }
+
+    let url = format!("{}/{}", clean_server, clean_topic);
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let tags_str = tags.join(",");
+    send_single_post(&client, &url, title, message, priority, &tags_str).await
+}
+
+#[cfg(feature = "ssr")]
+pub async fn send_test_all_priority_examples(server: &str, topic: &str) -> Result<(), String> {
+    send_single_notification(
+        server,
+        topic,
+        "Trak Test [1/4]: Lowest Priority",
+        "Example Priority 2: Routine reminder (low alert sound / vibration)",
+        2,
+        &["bell"],
+    )
+    .await?;
+
+    let server_s = server.to_string();
+    let topic_s = topic.to_string();
+
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+        if send_single_notification(
+            &server_s,
+            &topic_s,
+            "Trak Test [2/4]: Medium Priority",
+            "Example Priority 3: 1h deadline warning (standard chime)",
+            3,
+            &["clock1"],
+        )
+        .await
+        .is_err()
+        {
+            return;
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+        if send_single_notification(
+            &server_s,
+            &topic_s,
+            "Trak Test [3/4]: High Priority",
+            "Example Priority 4: 25m deadline warning (high alert chime)",
+            4,
+            &["warning", "rotating_light"],
+        )
+        .await
+        .is_err()
+        {
+            return;
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+        let _ = send_single_notification(
+            &server_s,
+            &topic_s,
+            "Trak Test [4/4]: Critical Priority",
+            "Example Priority 5: Crossed deadline alarm (maximum volume override)",
+            5,
+            &["rotating_light", "sos"],
+        )
+        .await;
+    });
+
+    Ok(())
+}

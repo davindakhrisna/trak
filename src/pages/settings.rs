@@ -48,12 +48,19 @@ pub fn SettingsPage() -> impl IntoView {
         }
     });
 
-    let on_test_ntfy = Callback::new(move |_| {
-        set_feedback.set(Some("Sending test notification...".to_string()));
+    let on_test_ntfy = Callback::new(move |tier: Option<u8>| {
+        let label = match tier {
+            Some(0..=2) => "Sending Lowest priority test (3 pulses)...",
+            Some(3) => "Sending Medium priority test (7 pulses)...",
+            Some(4) => "Sending High priority test (11 pulses)...",
+            Some(_) => "Sending Highest priority test (15 pulses)...",
+            None => "Sending all 4 priority example notifications...",
+        };
+        set_feedback.set(Some(label.to_string()));
         leptos::task::spawn_local(async move {
-            match crate::backend::api_settings::send_test_ntfy().await {
+            match crate::backend::api_settings::send_test_ntfy(tier).await {
                 Ok(()) => set_feedback.set(Some(
-                    "Test notification sent! Check your device.".to_string(),
+                    "Test notification(s) sent! Check your device.".to_string(),
                 )),
                 Err(e) => set_feedback.set(Some(crate::domain::clean_err(e))),
             }
