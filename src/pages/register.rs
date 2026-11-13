@@ -51,7 +51,7 @@ pub fn RegisterPage() -> impl IntoView {
         <MonolithShell active_path="/login" hide_nav=true>
             <section class="w-full flex flex-col items-center justify-center gap-6">
                 <div class="w-full flex flex-col items-center justify-center gap-1">
-                    <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">
+                    <h1 class="text-3xl font-bold tracking-tight text-ink">
                         {move || {
                             if store.has_any_user() {
                                 "Registration closed"
@@ -60,7 +60,7 @@ pub fn RegisterPage() -> impl IntoView {
                             }
                         }}
                     </h1>
-                    <p class="text-xs text-gray">
+                    <p class="text-xs text-ink-muted">
                         {move || {
                             if store.has_any_user() {
                                 "Administrator account claimed. Sign in to continue."
@@ -76,9 +76,9 @@ pub fn RegisterPage() -> impl IntoView {
                         view! {
                             <form
                                 on:submit=on_register
-                                class="w-full border border-black dark:border-white p-6 flex flex-col items-center gap-3 bg-white dark:bg-black"
+                                class="w-full border border-rule p-6 flex flex-col items-center gap-3 bg-surface"
                             >
-                                <p class="text-xs text-gray">
+                                <p class="text-xs text-ink-muted">
                                     "Create the primary administrator account for this instance. Public registration locks immediately after."
                                 </p>
                                 <input
@@ -97,7 +97,7 @@ pub fn RegisterPage() -> impl IntoView {
                                     on:input=move |ev| set_password.set(event_target_value(&ev))
                                     class="input-monolith"
                                 />
-                                <button type="submit" class="btn-monolith-solid">
+                                <button type="submit" class="btn-monolith-solid w-full">
                                     "Claim admin account"
                                 </button>
                             </form>
@@ -109,11 +109,11 @@ pub fn RegisterPage() -> impl IntoView {
                             let _ = win.location().set_href("/login");
                         }
                         view! {
-                            <div class="w-full border border-black dark:border-white p-6 flex flex-col items-center gap-4 bg-white dark:bg-black">
-                                <p class="text-sm text-black dark:text-white">
+                            <div class="w-full border border-rule p-6 flex flex-col items-center gap-4 bg-surface">
+                                <p class="text-sm text-ink">
                                     "Registration is closed. Redirecting to sign in..."
                                 </p>
-                                <a href="/login" class="btn-monolith-solid">
+                                <a href="/login" class="btn-monolith-solid w-full">
                                     "Go to Sign in"
                                 </a>
                             </div>
@@ -125,7 +125,7 @@ pub fn RegisterPage() -> impl IntoView {
                 {move || {
                     feedback.get().map(|msg| {
                         view! {
-                            <p class="w-full border border-black dark:border-white px-3 py-2 font-mono text-xs text-black dark:text-white">
+                            <p class="w-full border border-rule bg-muted px-3 py-2 font-mono text-xs text-ink">
                                 {msg}
                             </p>
                         }

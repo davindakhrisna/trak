@@ -42,23 +42,23 @@ pub fn UsersPage() -> impl IntoView {
         <MonolithShell active_path="/users" wide=true>
             {move || {
                 if !store.auth_initialized.get() {
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Verifying session..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Verifying session..."</div> }.into_any()
                 } else if store.current_user_id.get().is_none() {
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Redirecting to sign in..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Redirecting to sign in..."</div> }.into_any()
                 } else if !store.is_admin() {
                     #[cfg(target_arch = "wasm32")]
                     if let Some(win) = web_sys::window() {
                         let _ = win.location().set_href("/");
                     }
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Admin privileges required. Redirecting..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Admin privileges required. Redirecting..."</div> }.into_any()
                 } else {
                     view! {
                         <section class="w-full flex flex-col items-center justify-center gap-6">
                             <div class="w-full flex flex-col items-center justify-center gap-1">
-                                <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">
+                                <h1 class="text-3xl font-bold tracking-tight text-ink">
                                     "Users"
                                 </h1>
-                                <p class="text-xs text-gray">
+                                <p class="text-xs text-ink-muted">
                                     "Add accounts and assign administrator access."
                                 </p>
                             </div>
@@ -66,10 +66,10 @@ pub fn UsersPage() -> impl IntoView {
                             <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-5 items-start text-left">
                                 <form
                                     on:submit=on_create
-                                    class="w-full border border-black dark:border-white p-5 flex flex-col gap-3 bg-white dark:bg-black"
+                                    class="w-full border border-rule p-5 flex flex-col gap-3 bg-surface"
                                 >
-                                    <div class="pb-1 border-b border-black dark:border-white">
-                                        <span class="font-mono text-xs text-black dark:text-white uppercase tracking-wider">
+                                    <div class="pb-1.5 border-b border-rule">
+                                        <span class="font-mono text-xs text-ink uppercase tracking-wider font-medium">
                                             "Provision account"
                                         </span>
                                     </div>
@@ -92,19 +92,19 @@ pub fn UsersPage() -> impl IntoView {
 
                                     <div
                                         on:click=move |_| set_as_admin.update(|v| *v = !*v)
-                                        class="w-full px-4 py-2.5 flex items-center justify-start gap-3 cursor-pointer select-none"
+                                        class="w-full px-1 py-2 flex items-center justify-start gap-3 cursor-pointer select-none"
                                     >
                                         <SquareCheck
                                             checked=as_admin.get()
                                             on_toggle=Callback::new(move |_| set_as_admin.update(|v| *v = !*v))
                                             aria_label="Set new user as admin".to_string()
                                         />
-                                        <span class="text-xs text-black dark:text-white font-medium">
+                                        <span class="text-xs text-ink font-medium">
                                             "Set as admin"
                                         </span>
                                     </div>
 
-                                    <button type="submit" class="btn-monolith-solid">
+                                    <button type="submit" class="btn-monolith-solid w-full">
                                         "Add user"
                                     </button>
 
@@ -113,7 +113,7 @@ pub fn UsersPage() -> impl IntoView {
                                             .get()
                                             .map(|msg| {
                                                 view! {
-                                                    <p class="w-full border border-black dark:border-white px-3 py-2 font-mono text-xs text-black dark:text-white">
+                                                    <p class="w-full border border-rule bg-muted px-3 py-2 font-mono text-xs text-ink">
                                                         {msg}
                                                     </p>
                                                 }
@@ -122,16 +122,23 @@ pub fn UsersPage() -> impl IntoView {
                                 </form>
 
                                 <div class="w-full flex flex-col gap-2">
-                                    <div class="flex items-center justify-between px-1 pb-1 border-b border-black dark:border-white">
-                                        <span class="font-mono text-xs text-black dark:text-white uppercase tracking-wider">
+                                    <div class="flex items-center justify-between px-1 pb-1.5 border-b border-rule">
+                                        <span class="font-mono text-xs text-ink uppercase tracking-wider font-medium">
                                             "Users"
                                         </span>
-                                        <span class="font-mono text-xs text-gray">
-                                            {move || format!("{} accounts", store.users.get().len())}
+                                        <span class="font-mono text-xs tabular-nums text-ink-muted">
+                                            {move || {
+                                                let count = store.users.get().len();
+                                                if count == 1 {
+                                                    "1 account".to_string()
+                                                } else {
+                                                    format!("{} accounts", count)
+                                                }
+                                            }}
                                         </span>
                                     </div>
 
-                                    <ul class="w-full flex flex-col gap-2 max-h-[340px] overflow-y-auto scroll-monolith">
+                                    <ul class="w-full flex flex-col gap-2 max-h-[304px] overflow-y-auto scroll-monolith">
                                 {move || {
                                     store
                                         .users
@@ -146,18 +153,18 @@ pub fn UsersPage() -> impl IntoView {
                                             let title_name = u.username;
                                             view! {
                                                 <li class="cell-row">
-                                                    <span class="font-mono text-[11px] px-2 py-0.5 border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white shrink-0">
+                                                    <span class="font-mono text-[11px] px-2 py-0.5 border border-rule bg-muted text-ink shrink-0 font-medium">
                                                         {role.label()}
                                                     </span>
                                                     <span
                                                         title=title_name
-                                                        class="flex-1 min-w-0 px-2 text-left text-sm font-medium text-black dark:text-white truncate"
+                                                        class="flex-1 min-w-0 px-2 text-left text-sm font-medium text-ink truncate"
                                                     >
                                                         {display_name}
                                                     </span>
                                                     {if is_root {
                                                         view! {
-                                                            <span class="font-mono text-[11px] text-gray shrink-0">
+                                                            <span class="font-mono text-[11px] text-ink-muted shrink-0">
                                                                 "Initial admin"
                                                             </span>
                                                         }
@@ -206,7 +213,7 @@ pub fn UsersPage() -> impl IntoView {
                                                                             });
                                                                         }
                                                                     }
-                                                                    class="w-7 h-7 border border-gray text-gray hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white font-mono text-xs flex items-center justify-center cursor-pointer shrink-0"
+                                                                    class="w-7 h-7 border border-transparent text-ink-muted hover:border-signal hover:text-signal hover:bg-signal-soft font-mono text-xs flex items-center justify-center transition-colors duration-75 cursor-pointer shrink-0"
                                                                 >
                                                                     "×"
                                                                 </button>

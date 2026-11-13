@@ -3,26 +3,43 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-canvas: #F6F5F0;
+    --bg-surface: #FFFFFF;
+    --bg-muted: #ECEAE2;
+    --text-ink: #181816;
+    --text-ink-hover: #2E2E2A;
+    --text-muted: #636159;
+    --border-rule: #DDDAD2;
+    --border-strong: #181816;
+    --signal: #B42318;
+    --signal-soft: rgba(180, 35, 24, 0.08);
+  }
+
+  html.dark {
+    --bg-canvas: #141413;
+    --bg-surface: #1E1E1C;
+    --bg-muted: #161614;
+    --text-ink: #ECEBE6;
+    --text-ink-hover: #D6D5CE;
+    --text-muted: #9A988F;
+    --border-rule: #2E2E2A;
+    --border-strong: #ECEBE6;
+    --signal: #F06458;
+    --signal-soft: rgba(240, 100, 88, 0.12);
+  }
+
   *,
   *::before,
   *::after {
     border-radius: 0px !important;
     box-shadow: none !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-
-  *::-webkit-scrollbar,
-  ::-webkit-scrollbar {
-    display: none !important;
-    width: 0px !important;
-    height: 0px !important;
   }
 
   html,
   body {
-    background-color: #FFFFFF;
-    color: #000000;
+    background-color: var(--bg-canvas);
+    color: var(--text-ink);
     font-family: "Space Grotesk", system-ui, sans-serif;
     margin: 0;
     padding: 0;
@@ -30,26 +47,24 @@
     overflow-x: hidden;
   }
 
-  html.dark,
-  html.dark body {
-    background-color: #000000;
-    color: #FFFFFF;
-  }
-
   ::selection {
-    background-color: #000000;
-    color: #FFFFFF;
+    background-color: var(--text-ink);
+    color: var(--bg-canvas);
   }
 
-  html.dark ::selection {
-    background-color: #FFFFFF;
-    color: #000000;
+  a:focus-visible,
+  button:focus-visible,
+  [role="checkbox"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="radio"]:focus-visible {
+    outline: 2px solid var(--border-strong);
+    outline-offset: 2px;
   }
 }
 
 @layer components {
   .monolith-page {
-    @apply min-h-screen w-full bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-center px-4 py-12 text-center transition-colors duration-75;
+    @apply min-h-screen w-full bg-canvas text-ink flex flex-col items-center justify-center px-4 py-12 text-center transition-colors duration-75;
   }
 
   .monolith-spine {
@@ -61,41 +76,60 @@
   }
 
   .scroll-monolith {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-rule) transparent;
   }
 
   .scroll-monolith::-webkit-scrollbar {
-    display: none !important;
-    width: 0px !important;
-    height: 0px !important;
+    width: 4px;
+    height: 4px;
+  }
+
+  .scroll-monolith::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroll-monolith::-webkit-scrollbar-thumb {
+    background-color: var(--border-rule);
+  }
+
+  .scroll-monolith::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
+  }
+
+  .modal-backdrop {
+    background-color: rgba(20, 20, 19, 0.72);
   }
 
   .input-monolith {
-    @apply w-full bg-white dark:bg-black text-black dark:text-white placeholder-gray border border-black dark:border-white rounded-none px-4 py-3 text-left font-sans text-sm focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition-colors duration-75;
+    @apply w-full bg-surface text-ink placeholder-ink-muted border border-rule rounded-none px-3.5 py-2.5 text-left font-sans text-sm focus:outline-none focus:border-rule-strong transition-colors duration-75;
   }
 
   .btn-monolith-solid {
-    @apply w-full bg-black dark:bg-white text-white dark:text-black border border-black dark:border-white rounded-none px-4 py-3 text-center font-sans text-sm font-medium hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer select-none;
+    @apply inline-flex items-center justify-center bg-ink text-canvas border border-rule-strong rounded-none px-5 py-2.5 text-center font-sans text-sm font-medium hover:bg-[var(--text-ink-hover)] transition-colors duration-75 cursor-pointer select-none;
   }
 
   .btn-monolith-ghost {
-    @apply bg-white dark:bg-black text-black dark:text-white border border-black dark:border-white rounded-none px-3 py-1.5 text-center font-mono text-xs hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors duration-75 cursor-pointer select-none shrink-0;
+    @apply inline-flex items-center justify-center bg-surface text-ink border border-rule rounded-none px-3 py-1.5 text-center font-mono text-xs hover:border-rule-strong transition-colors duration-75 cursor-pointer select-none shrink-0;
+  }
+
+  .btn-monolith-danger {
+    @apply inline-flex items-center justify-center bg-surface text-ink border border-rule rounded-none px-3 py-1.5 text-center font-mono text-xs hover:border-signal hover:text-signal hover:bg-signal-soft transition-colors duration-75 cursor-pointer select-none shrink-0;
   }
 
   .cell-row {
-    @apply w-full border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white rounded-none px-3 sm:px-4 py-2.5 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-3 text-left transition-colors duration-75;
+    @apply w-full border border-rule hover:border-rule-strong bg-surface text-ink rounded-none px-3.5 sm:px-4 py-3 flex items-center justify-between gap-2.5 sm:gap-3 text-left transition-colors duration-75;
   }
 
   .cell-row-muted {
-    @apply w-full border border-gray bg-white dark:bg-black text-gray rounded-none px-3 sm:px-4 py-2.5 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-3 text-left transition-colors duration-75;
+    @apply w-full border border-rule bg-muted text-ink-muted rounded-none px-3.5 sm:px-4 py-3 flex items-center justify-between gap-2.5 sm:gap-3 text-left transition-colors duration-75;
   }
 
   .check-square {
-    @apply w-4 h-4 border border-black dark:border-white bg-white dark:bg-black rounded-none flex items-center justify-center shrink-0 cursor-pointer;
+    @apply w-4 h-4 border border-rule-strong bg-surface rounded-none flex items-center justify-center shrink-0 cursor-pointer transition-colors duration-75;
   }
 
   .check-square-active {
-    @apply w-4 h-4 border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black rounded-none flex items-center justify-center shrink-0 cursor-pointer;
+    @apply w-4 h-4 border border-rule-strong bg-ink text-canvas rounded-none flex items-center justify-center shrink-0 cursor-pointer transition-colors duration-75;
   }
 }

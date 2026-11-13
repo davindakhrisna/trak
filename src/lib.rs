@@ -36,7 +36,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <HydrationScripts options/>
                 <MetaTags/>
             </head>
-            <body class="bg-white dark:bg-black text-black dark:text-white antialiased font-sans">
+            <body class="bg-canvas text-ink antialiased font-sans">
                 <App/>
             </body>
         </html>
@@ -109,7 +109,7 @@ pub fn App() -> impl IntoView {
 
     view! {
         <Stylesheet id="leptos" href="/pkg/trak.css"/>
-        <Title text="Today's todo list"/>
+        <Title text="Trak"/>
 
         <Router>
             <RouteGuard/>
@@ -117,9 +117,9 @@ pub fn App() -> impl IntoView {
                 view! {
                     <div class="monolith-page">
                         <div class="monolith-spine gap-4">
-                            <h1 class="text-2xl font-bold text-black">"404"</h1>
-                            <p class="font-mono text-xs text-gray">"ROUTE NOT FOUND"</p>
-                            <a href="/" class="btn-monolith-solid">"Return to Today"</a>
+                            <h1 class="text-2xl font-bold text-ink">"404"</h1>
+                            <p class="font-mono text-xs text-ink-muted uppercase tracking-wider">"Route not found"</p>
+                            <a href="/" class="btn-monolith-solid w-full">"Return to Today"</a>
                         </div>
                     </div>
                 }

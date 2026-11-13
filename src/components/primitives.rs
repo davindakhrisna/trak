@@ -37,7 +37,7 @@ pub fn MonolithShell(
     }
 
     view! {
-        <div class="min-h-screen w-full overflow-x-hidden bg-white dark:bg-black text-black dark:text-white flex flex-col items-center justify-start transition-colors duration-75">
+        <div class="min-h-screen w-full overflow-x-hidden bg-canvas text-ink flex flex-col items-center justify-start transition-colors duration-75">
             <MobileNav active_path=active_path />
             <div class="w-full flex-1 lg:flex-none flex flex-col items-center justify-start px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-12 my-auto">
                 <div class="w-full lg:w-fit max-w-full mx-auto flex flex-col lg:flex-row items-stretch justify-center gap-6 lg:gap-8">
@@ -66,7 +66,7 @@ pub fn SquareCheck(checked: bool, on_toggle: Callback<()>, aria_label: String) -
             class=if checked { "check-square-active" } else { "check-square" }
         >
             {if checked {
-                view! { <span class="block w-2 h-2 bg-white dark:bg-black"></span> }.into_any()
+                view! { <span class="block w-2 h-2 bg-canvas"></span> }.into_any()
             } else {
                 ().into_any()
             }}
@@ -98,15 +98,15 @@ pub fn TodayTaskCell(
                 aria_label=format!("Toggle {}", task.title)
             />
             <span class=if is_done {
-                "flex-1 min-w-0 px-1 text-left text-sm line-through text-gray break-words"
+                "flex-1 min-w-0 px-1 text-left text-sm line-through text-ink-muted break-words"
             } else {
-                "flex-1 min-w-0 px-1 text-left text-sm text-black dark:text-white font-medium break-words"
+                "flex-1 min-w-0 px-1 text-left text-sm text-ink font-medium break-words"
             }>
                 {title_text}
             </span>
             {time_badge.map(|tb| {
                 view! {
-                    <span class="font-mono text-[10px] text-gray border border-gray px-1.5 py-0.5 shrink-0 whitespace-nowrap">
+                    <span class="font-mono text-[11px] tabular-nums text-ink-muted bg-muted border border-rule px-2 py-0.5 shrink-0 whitespace-nowrap">
                         {tb}
                     </span>
                 }
@@ -115,7 +115,7 @@ pub fn TodayTaskCell(
                 type="button"
                 aria-label=format!("Remove {}", task.title)
                 on:click=move |_| on_remove.run(task_id_remove.clone())
-                class="shrink-0 w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center font-mono text-sm sm:text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center font-mono text-sm sm:text-xs text-ink-muted border border-transparent hover:border-signal hover:text-signal hover:bg-signal-soft transition-colors duration-75 cursor-pointer"
             >
                 "×"
             </button>
@@ -140,15 +140,15 @@ pub fn TemplateItemCell(
     let del_label = format!("Delete {}", tpl.title);
     view! {
         <li class="cell-row">
-            <span class="font-mono text-[11px] text-gray border border-gray px-1.5 py-0.5 shrink-0">
+            <span class="font-mono text-[11px] text-ink bg-muted border border-rule px-2 py-0.5 shrink-0 font-medium">
                 {day_code}
             </span>
-            <span class="flex-1 min-w-0 px-1 text-left text-sm text-black dark:text-white font-medium break-words">
+            <span class="flex-1 min-w-0 px-1 text-left text-sm text-ink font-medium break-words">
                 {title_text}
             </span>
             {time_badge.map(|tb| {
                 view! {
-                    <span class="font-mono text-[10px] text-gray border border-gray px-1.5 py-0.5 shrink-0 whitespace-nowrap">
+                    <span class="font-mono text-[11px] tabular-nums text-ink-muted bg-muted border border-rule px-2 py-0.5 shrink-0 whitespace-nowrap">
                         {tb}
                     </span>
                 }
@@ -157,7 +157,7 @@ pub fn TemplateItemCell(
                 type="button"
                 aria-label=del_label
                 on:click=move |_| on_delete.run(tpl_id.clone())
-                class="shrink-0 w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center font-mono text-sm sm:text-xs text-gray hover:text-black dark:hover:text-white hover:border hover:border-black dark:hover:border-white cursor-pointer"
+                class="shrink-0 w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center font-mono text-sm sm:text-xs text-ink-muted border border-transparent hover:border-signal hover:text-signal hover:bg-signal-soft transition-colors duration-75 cursor-pointer"
             >
                 "×"
             </button>

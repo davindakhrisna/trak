@@ -67,17 +67,17 @@ pub fn TemplatesPage() -> impl IntoView {
         <MonolithShell active_path="/templates" wide=true>
             {move || {
                 if !store.auth_initialized.get() {
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Verifying session..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Verifying session..."</div> }.into_any()
                 } else if store.current_user_id.get().is_none() {
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Redirecting to sign in..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Redirecting to sign in..."</div> }.into_any()
                 } else {
                     view! {
                         <section class="w-full flex flex-col items-center justify-center gap-6">
                 <div class="w-full flex flex-col items-center justify-center gap-1">
-                    <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">
+                    <h1 class="text-3xl font-bold tracking-tight text-ink">
                         "Templates"
                     </h1>
-                    <p class="text-xs text-gray">
+                    <p class="text-xs text-ink-muted">
                         "Select a day to provision recurring tasks."
                     </p>
                 </div>
@@ -85,7 +85,7 @@ pub fn TemplatesPage() -> impl IntoView {
                 <div
                     role="tablist"
                     aria-label="Select day of week"
-                    class="w-full grid grid-cols-7 border border-black dark:border-white bg-white dark:bg-black"
+                    class="w-full grid grid-cols-7 border border-rule bg-surface"
                 >
                     {Weekday::ALL
                         .into_iter()
@@ -101,18 +101,18 @@ pub fn TemplatesPage() -> impl IntoView {
                                     on:click=move |_| store.selected_day.set(day)
                                     class=move || {
                                         if is_selected() {
-                                            "py-2 sm:py-3 flex flex-col items-center justify-center gap-0.5 bg-black dark:bg-white text-white dark:text-black border-r border-black dark:border-white last:border-r-0 font-mono text-[11px] sm:text-xs cursor-pointer transition-colors duration-75"
+                                            "py-2.5 sm:py-3 flex flex-col items-center justify-center gap-0.5 bg-ink text-canvas border-r border-rule last:border-r-0 font-mono text-[11px] sm:text-xs cursor-pointer transition-colors duration-75"
                                         } else {
-                                            "py-2 sm:py-3 flex flex-col items-center justify-center gap-0.5 bg-white dark:bg-black text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black border-r border-black dark:border-white last:border-r-0 font-mono text-[11px] sm:text-xs transition-colors duration-75 cursor-pointer"
+                                            "py-2.5 sm:py-3 flex flex-col items-center justify-center gap-0.5 bg-surface text-ink hover:bg-muted border-r border-rule last:border-r-0 font-mono text-[11px] sm:text-xs transition-colors duration-75 cursor-pointer"
                                         }
                                     }
                                 >
                                     <span class="font-bold">{day.code()}</span>
                                     <span class=move || {
                                         if is_selected() {
-                                            "text-[9px] sm:text-[10px] text-white dark:text-black"
+                                            "text-[11px] tabular-nums text-canvas opacity-80"
                                         } else {
-                                            "text-[9px] sm:text-[10px] text-gray"
+                                            "text-[11px] tabular-nums text-ink-muted"
                                         }
                                     }>{move || count_for_day()}</span>
                                 </button>
@@ -125,37 +125,40 @@ pub fn TemplatesPage() -> impl IntoView {
                     on:submit=on_submit
                     class="w-full flex flex-col items-center gap-2"
                 >
-                    <div class="w-full flex flex-col sm:flex-row items-stretch border border-black dark:border-white bg-white dark:bg-black">
+                    <div class="w-full flex flex-col sm:flex-row items-stretch border border-rule focus-within:border-rule-strong bg-surface transition-colors duration-75">
                         <input
                             type="text"
                             placeholder="New recurring task..."
+                            aria-label="Recurring task title"
                             maxlength="200"
                             prop:value=move || draft.get()
                             on:input=move |ev| set_draft.set(event_target_value(&ev))
-                            class="w-full sm:flex-1 min-w-0 bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 sm:px-4 py-3 text-left text-sm focus:outline-none border-b sm:border-b-0 sm:border-r border-black dark:border-white"
+                            class="w-full sm:flex-1 min-w-0 bg-surface text-ink placeholder-ink-muted px-3.5 sm:px-4 py-3 text-left text-sm focus:outline-none border-b sm:border-b-0 sm:border-r border-rule"
                         />
                         <div class="flex items-stretch w-full sm:w-auto shrink-0">
                             <input
                                 type="text"
                                 placeholder="Start"
+                                aria-label="Start time (e.g. 09:00)"
                                 title="Start time (e.g. 09:00)"
                                 maxlength="20"
                                 prop:value=move || start_time.get()
                                 on:input=move |ev| set_start_time.set(event_target_value(&ev))
-                                class="flex-1 min-w-0 sm:flex-none sm:w-20 md:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                                class="flex-1 min-w-0 sm:flex-none sm:w-20 md:w-24 border-r border-rule bg-surface text-ink placeholder-ink-muted px-3 py-2.5 sm:py-3 text-left text-xs font-mono tabular-nums focus:outline-none"
                             />
                             <input
                                 type="text"
                                 placeholder="Due"
+                                aria-label="Deadline (e.g. 10:00)"
                                 title="Deadline (e.g. 10:00)"
                                 maxlength="20"
                                 prop:value=move || deadline.get()
                                 on:input=move |ev| set_deadline.set(event_target_value(&ev))
-                                class="flex-1 min-w-0 sm:flex-none sm:w-20 md:w-24 border-r border-black dark:border-white bg-white dark:bg-black text-black dark:text-white placeholder-gray px-3 py-2.5 sm:py-3 text-left text-xs font-mono focus:outline-none"
+                                class="flex-1 min-w-0 sm:flex-none sm:w-20 md:w-24 border-r border-rule bg-surface text-ink placeholder-ink-muted px-3 py-2.5 sm:py-3 text-left text-xs font-mono tabular-nums focus:outline-none"
                             />
                             <button
                                 type="submit"
-                                class="px-4 sm:px-5 py-2.5 sm:py-3 bg-black dark:bg-white text-white dark:text-black font-mono text-xs hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-75 cursor-pointer shrink-0 font-bold"
+                                class="px-4 sm:px-5 py-2.5 sm:py-3 bg-ink text-canvas font-mono text-xs hover:bg-[var(--text-ink-hover)] transition-colors duration-75 cursor-pointer shrink-0 font-bold"
                             >
                                 "Save"
                             </button>
@@ -169,8 +172,8 @@ pub fn TemplatesPage() -> impl IntoView {
                         let day_label = store.selected_day.get().name();
                         if list.is_empty() {
                             view! {
-                                <div class="w-full border border-gray py-8 px-4 text-center">
-                                    <p class="text-sm text-gray">
+                                <div class="w-full border border-rule bg-muted py-8 px-4 text-center">
+                                    <p class="text-sm text-ink-muted">
                                         {format!("No recurring tasks set for {}.", day_label)}
                                     </p>
                                 </div>
@@ -178,7 +181,7 @@ pub fn TemplatesPage() -> impl IntoView {
                                 .into_any()
                         } else {
                             view! {
-                                <ul class="w-full flex flex-col gap-2 max-h-[340px] overflow-y-auto scroll-monolith">
+                                <ul class="w-full flex flex-col gap-2 max-h-[304px] overflow-y-auto scroll-monolith">
                                     {list
                                         .into_iter()
                                         .map(|tpl| {

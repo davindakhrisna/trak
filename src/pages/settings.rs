@@ -1,6 +1,6 @@
 use crate::components::MonolithShell;
 use crate::domain::UserSettings;
-use crate::pages::settings_guide::SettingsGuideTabs;
+use crate::pages::settings_guide::SettingsGuideModal;
 use crate::pages::settings_lockdown::SettingsLockdownCard;
 use crate::pages::settings_ntfy::SettingsNtfyCard;
 use crate::state::use_app_store;
@@ -11,6 +11,7 @@ pub fn SettingsPage() -> impl IntoView {
     let store = use_app_store();
     let (settings, set_settings) = signal(Option::<UserSettings>::None);
     let (feedback, set_feedback) = signal(Option::<String>::None);
+    let (show_guides, set_show_guides) = signal(false);
     let (origin, _set_origin) = signal("http://127.0.0.1:3000".to_string());
     let ntfy_enabled =
         Signal::derive(move || settings.get().map(|s| s.ntfy_enabled).unwrap_or(false));
@@ -131,33 +132,42 @@ pub fn SettingsPage() -> impl IntoView {
         <MonolithShell active_path="/settings" wide=true>
             {move || {
                 if !store.auth_initialized.get() {
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Verifying session..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Verifying session..."</div> }.into_any()
                 } else if store.current_user_id.get().is_none() {
-                    view! { <div class="py-12 font-mono text-xs text-gray">"Redirecting to sign in..."</div> }.into_any()
+                    view! { <div class="py-12 font-mono text-xs text-ink-muted">"Redirecting to sign in..."</div> }.into_any()
                 } else if settings.get().is_some() {
                     view! {
                         <section class="w-full flex flex-col items-center justify-center gap-6">
                             <div class="w-full flex flex-col items-center justify-center gap-1">
-                                <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">"Settings"</h1>
-                                <p class="text-xs text-gray">"Configure Ntfy alerts and mobile lockdown."</p>
+                                <h1 class="text-3xl font-bold tracking-tight text-ink">"Settings"</h1>
+                                <p class="text-xs text-ink-muted">"Configure Ntfy alerts and mobile lockdown."</p>
                             </div>
 
-                            <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-5 items-start text-left">
+                            <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch text-left">
                                 <SettingsNtfyCard settings=settings set_settings=set_settings on_test_ntfy=on_test_ntfy on_regen_topic=on_regen_topic />
                                 <SettingsLockdownCard settings=settings set_settings=set_settings api_url=api_url on_regen_secret=on_regen_secret on_reset_lockdown=on_reset_lockdown />
                             </div>
 
-                            <div class="w-full flex justify-end">
-                                <button type="button" on:click=move |_| on_save.run(()) class="btn-monolith-solid px-8">"Save All Settings"</button>
+                            <div class="w-full flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <button
+                                    type="button"
+                                    on:click=move |_| set_show_guides.set(true)
+                                    class="btn-monolith-ghost w-full sm:w-auto px-5 py-2.5 text-xs"
+                                >
+                                    "Setup & Automation Guides"
+                                </button>
+                                <button type="button" on:click=move |_| on_save.run(()) class="btn-monolith-solid w-full sm:w-auto px-8">"Save All Settings"</button>
                             </div>
 
                             {move || feedback.get().map(|msg| view! {
-                                <div class="w-full border border-black dark:border-white p-3 font-mono text-xs text-black dark:text-white bg-white dark:bg-black">
+                                <div class="w-full border border-rule-strong p-3 font-mono text-xs text-ink bg-surface text-left">
                                     {msg}
                                 </div>
                             })}
 
-                            <SettingsGuideTabs
+                            <SettingsGuideModal
+                                open=show_guides
+                                on_close=Callback::new(move |_| set_show_guides.set(false))
                                 api_url=api_url
                                 topic_url=topic_url
                                 ntfy_enabled=ntfy_enabled
@@ -167,7 +177,7 @@ pub fn SettingsPage() -> impl IntoView {
                     }.into_any()
                 } else {
                     view! {
-                        <div class="py-12 font-mono text-xs text-gray">"Loading settings..."</div>
+                        <div class="py-12 font-mono text-xs text-ink-muted">"Loading settings..."</div>
                     }.into_any()
                 }
             }}

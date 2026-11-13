@@ -46,8 +46,8 @@ pub fn LoginPage() -> impl IntoView {
         <MonolithShell active_path="/login" hide_nav=true>
             <section class="w-full flex flex-col items-center justify-center gap-6">
                 <div class="w-full flex flex-col items-center justify-center gap-1">
-                    <h1 class="text-3xl font-bold tracking-tight text-black dark:text-white">"Sign in"</h1>
-                    <p class="text-xs text-gray">
+                    <h1 class="text-3xl font-bold tracking-tight text-ink">"Sign in"</h1>
+                    <p class="text-xs text-ink-muted">
                         {move || {
                             if store.auth_initialized.get() && !store.has_any_user() {
                                 "Instance uninitialized. Register the first administrator account."
@@ -61,11 +61,11 @@ pub fn LoginPage() -> impl IntoView {
                 {move || {
                     if store.auth_initialized.get() && !store.has_any_user() {
                         view! {
-                            <div class="w-full border border-black dark:border-white p-6 flex flex-col items-center gap-4 bg-white dark:bg-black">
-                                <p class="text-sm text-black dark:text-white">
+                            <div class="w-full border border-rule p-6 flex flex-col items-center gap-4 bg-surface">
+                                <p class="text-sm text-ink">
                                     "No accounts exist yet. The first registered account becomes the administrator."
                                 </p>
-                                <a href="/register" class="btn-monolith-solid">
+                                <a href="/register" class="btn-monolith-solid w-full">
                                     "Register first admin"
                                 </a>
                             </div>
@@ -75,7 +75,7 @@ pub fn LoginPage() -> impl IntoView {
                         view! {
                             <form
                                 on:submit=on_submit
-                                class="w-full border border-black dark:border-white p-6 flex flex-col items-center gap-3 bg-white dark:bg-black"
+                                class="w-full border border-rule p-6 flex flex-col items-center gap-3 bg-surface"
                             >
                                 <input
                                     type="text"
@@ -93,14 +93,14 @@ pub fn LoginPage() -> impl IntoView {
                                     on:input=move |ev| set_password.set(event_target_value(&ev))
                                     class="input-monolith"
                                 />
-                                <button type="submit" class="btn-monolith-solid">
+                                <button type="submit" class="btn-monolith-solid w-full">
                                     "Sign in"
                                 </button>
 
                                 {move || {
                                     status.get().map(|msg| {
                                         view! {
-                                            <p class="w-full border border-black dark:border-white px-3 py-2 font-mono text-xs text-black dark:text-white">
+                                            <p class="w-full border border-rule bg-muted px-3 py-2 font-mono text-xs text-ink">
                                                 {msg}
                                             </p>
                                         }

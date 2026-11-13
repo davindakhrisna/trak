@@ -91,19 +91,15 @@ pub fn ThemeSelector() -> impl IntoView {
 
     let btn_class = move |target: ThemeMode, is_last: bool| {
         let active = store.theme_mode.get() == target;
-        let border_r = if is_last {
-            ""
-        } else {
-            "border-r border-black dark:border-white"
-        };
+        let border_r = if is_last { "" } else { "border-r border-rule" };
         if active {
             format!(
-                "px-2 py-0.5 bg-black dark:bg-white text-white dark:text-black font-bold {} cursor-pointer select-none transition-colors duration-75",
+                "px-2.5 py-1 bg-ink text-canvas font-bold {} cursor-pointer select-none transition-colors duration-75",
                 border_r
             )
         } else {
             format!(
-                "px-2 py-0.5 bg-white dark:bg-black text-black dark:text-white hover:text-gray {} cursor-pointer select-none transition-colors duration-75",
+                "px-2.5 py-1 bg-surface text-ink-muted hover:text-ink {} cursor-pointer select-none transition-colors duration-75",
                 border_r
             )
         }
@@ -113,7 +109,7 @@ pub fn ThemeSelector() -> impl IntoView {
         <div
             role="radiogroup"
             aria-label="Theme selector"
-            class="inline-flex items-center border border-black dark:border-white font-mono text-[10px] uppercase tracking-wider"
+            class="inline-flex items-center border border-rule bg-surface font-mono text-[11px] uppercase tracking-wider"
         >
             <button
                 type="button"
