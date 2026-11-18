@@ -8,12 +8,6 @@ Self-hosted daily task scheduler and discipline engine built with Rust, Leptos, 
 
 Trak provides a focused daily task planner with recurring weekly templates, ntfy push notifications, multi-user role management, and an uncompromising monochrome brutalist interface.
 
-## Tech Stack
-
-- Backend: Axum 0.7, SQLx (SQLite WAL mode), Argon2id password hashing, HMAC-SHA256 session tokens
-- Frontend: Leptos 0.7 (SSR + Hydration), Tailwind CSS
-- Tooling: Nix flake, cargo-leptos, Playwright E2E
-
 ## Development
 
 Prerequisites: Nix with flakes enabled (or Rust 1.80+ and cargo-leptos).
@@ -50,7 +44,7 @@ DATABASE_URL=sqlite:///var/lib/trak/trak.db
 JWT_SECRET=your_random_secret_at_least_32_characters
 ```
 
-### Systemd & Reverse Proxy
+### Service & Reverse Proxy
 
 Deployment templates are provided in `deploy/`:
 - `deploy/trak.service`: Hardened systemd service unit
