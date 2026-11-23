@@ -128,6 +128,7 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push Docker image to GHCR
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -136,3 +137,25 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Dispatch release to nixos-vps
+        env:
+          NIXOS_VPS_DISPATCH_TOKEN: ${{ secrets.NIXOS_VPS_DISPATCH_TOKEN }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          if [ -z "$NIXOS_VPS_DISPATCH_TOKEN" ]; then
+            echo "NIXOS_VPS_DISPATCH_TOKEN is not set; skipping nixos-vps dispatch."
+            exit 0
+          fi
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}@${DIGEST}"
+          jq -n \
+            --arg app "trak" \
+            --arg image "$IMAGE" \
+            '{event_type: "bump-release", client_payload: {app: $app, image: $image}}' \
+          | curl -fsSL -X POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer $NIXOS_VPS_DISPATCH_TOKEN" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/gala-edukasi-nusantara/nixos-vps/dispatches \
+              -d @-
